@@ -1,0 +1,321 @@
+<div class="settings-wrapper">
+  <!-- Top banner showing the CRM state -->
+  <header class="crm-banner" [ngClass]="activePlatform()">
+    <div class="banner-content">
+      <span class="platform-badge">{{ activePlatform() | uppercase }} MODE</span>
+      <h1>CRM Settings Integration</h1>
+      <p>This settings page translates state mapping perfectly depending on the active CRM container.</p>
+    </div>
+  </header>
+
+  <main class="settings-container">
+    <!-- Error alert -->
+    <div *ngIf="settingsService.error() as errMsg" class="alert error-alert">
+      <strong>Mapping Error:</strong> {{ errMsg }}
+    </div>
+
+    <!-- Success notification -->
+    <div *ngIf="showSuccess" class="alert success-alert">
+      <strong>Success:</strong> Settings payload sent and successfully updated in CRM!
+    </div>
+
+    <!-- Connection Screen for HubSpot OAuth (if disconnected) -->
+    <div *ngIf="activePlatform() === 'hubspot' && !settingsService.isConnected()" class="connection-screen">
+      <div class="card connection-card">
+        <div class="connection-header">
+          <span class="hubspot-logo">🟠</span>
+          <h2>Connect with HubSpot</h2>
+          <p>Authorize this AI application to access and manage your communication channels and bots.</p>
+        </div>
+
+        <div class="connection-body">
+          <button
+            [disabled]="settingsService.checkingConnection() || isPolling"
+            (click)="connectToHubspot()"
+            class="btn btn-primary oauth-btn"
+          >
+            {{ isPolling ? 'Connecting and verifying...' : 'Connect to HubSpot' }}
+          </button>
+
+          <div *ngIf="isPolling" class="polling-indicator">
+            <div class="spinner"></div>
+            <p>Waiting for OAuth connection to complete in the new tab...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activePlatform() !== 'hubspot' || settingsService.isConnected()" class="layout-content">
+      <!-- Main settings controls -->
+      <div class="main-column">
+        <!-- Tabs Navigation for HubSpot -->
+        <div *ngIf="activePlatform() === 'hubspot'" class="tabs-navigation">
+          <button
+            class="tab-btn"
+            [class.active]="activeTab === 'channels'"
+            (click)="activeTab = 'channels'"
+          >
+            📞 Channels Integration
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="activeTab === 'chatbots'"
+            (click)="activeTab = 'chatbots'"
+          >
+            🤖 AI Chatbots / Agents
+          </button>
+        </div>
+
+        @if (settingsService.loading()) {
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Establishing communication & loading CRM configurations...</p>
+          </div>
+        } @else if (settingsService.settings(); as currentSettings) {
+
+          <!-- SIP Editor display taking absolute priority when editing/creating -->
+          <div *ngIf="activeSipChannel" style="margin-bottom: 24px;">
+            <app-sip-channel-editor
+              [channelInput]="activeSipChannel"
+              (save)="saveSipChannel($event, currentSettings)"
+              (cancel)="activeSipChannel = null"
+            ></app-sip-channel-editor>
+          </div>
+
+          <!-- Channels Tab Content -->
+          <div *ngIf="(!activeSipChannel) && (activePlatform() !== 'hubspot' || activeTab === 'channels')">
+            <!-- Autopilot Switch -->
+            <div class="card toggle-card">
+              <div class="toggle-row">
+                <div class="toggle-text">
+                  <h3>Autopilot Instant Response</h3>
+                  <p>Trigger instant AI voice and text replies upon detecting inbound CRM communication</p>
+                </div>
+                <label class="switch large">
+                  <input
+                    type="checkbox"
+                    [checked]="currentSettings.autoResponseEnabled"
+                    (change)="toggleAutopilot(currentSettings)"
+                  />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Channel list component -->
+            <app-channel-list
+              [channels]="currentSettings.channels"
+              (channelsChange)="onChannelsChange(currentSettings, $event)"
+            ></app-channel-list>
+
+            <!-- Register Channel Form -->
+            <div class="card creation-card" *ngIf="activePlatform() === 'hubspot'">
+              <div class="creation-header">
+                <span class="header-icon">📞</span>
+                <div class="header-text">
+                  <h3>Register New Channel</h3>
+                  <p class="notice-badge">ℹ️ Note: This channel will be created and hosted in Pronnel for AI calling</p>
+                </div>
+              </div>
+
+              <div class="creation-body">
+                <div class="registration-buttons" *ngIf="!showChannelForm && !showSipChannelForm" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <button (click)="showChannelForm = true" class="btn btn-secondary">
+                    + Register Channel in Pronnel
+                  </button>
+                  <button (click)="startSipCreation()" class="btn btn-secondary">
+                    + Register SIP Channel in Pronnel
+                  </button>
+                </div>
+
+                <div *ngIf="showChannelForm" class="creation-form">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="ch-name">Channel Name</label>
+                      <input
+                        id="ch-name"
+                        type="text"
+                        [(ngModel)]="newChannelName"
+                        placeholder="e.g. HubSpot Support Line"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="ch-type">Channel Type</label>
+                      <select id="ch-type" [(ngModel)]="newChannelType" class="form-control">
+                        <option value="sms">SMS / Texting</option>
+                        <option value="voice">AI Voice Call</option>
+                        <option value="whatsapp">WhatsApp Business</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="ch-phone">Phone Number</label>
+                      <input
+                        id="ch-phone"
+                        type="text"
+                        [(ngModel)]="newChannelPhone"
+                        placeholder="e.g. +1 (555) 019-2834"
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-actions" style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button (click)="createChannel(currentSettings)" class="btn btn-primary" [disabled]="!newChannelName">
+                      Create Channel
+                    </button>
+                    <button (click)="showChannelForm = false" class="btn btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Initial SIP Registration Form -->
+                <div *ngIf="showSipChannelForm" class="creation-form">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="ch-name">Channel Name</label>
+                      <input
+                        id="ch-name"
+                        type="text"
+                        [(ngModel)]="newChannelName"
+                        placeholder="e.g. Feb10"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="ch-phone">Phone Number</label>
+                      <input
+                        id="ch-phone"
+                        type="text"
+                        [(ngModel)]="newChannelPhone"
+                        placeholder="e.g. 1204797517"
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-actions" style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button (click)="createSipChannelPlaceholder()" class="btn btn-primary" [disabled]="!newChannelName">
+                      Create & Configure SIP Details
+                    </button>
+                    <button (click)="showSipChannelForm = false" class="btn btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Chatbots Tab Content -->
+          <div *ngIf="(!activeSipChannel) && (activePlatform() !== 'hubspot' || activeTab === 'chatbots')">
+            <!-- Agent configurations component -->
+            <app-agent-select
+              [agents]="currentSettings.agents"
+              [selectedAgentId]="currentSettings.defaultAgentId"
+              (agentsChange)="onAgentsChange(currentSettings, $event)"
+              (selectedAgentIdChange)="onDefaultAgentIdChange(currentSettings, $event)"
+            ></app-agent-select>
+
+            <!-- Configure Chatbot Form -->
+            <div class="card creation-card" *ngIf="activePlatform() === 'hubspot'">
+              <div class="creation-header">
+                <span class="header-icon">🤖</span>
+                <div class="header-text">
+                  <h3>Configure New Chatbot Agent</h3>
+                  <p class="notice-badge">ℹ️ Note: This chatbot will be created and hosted in Pronnel for AI calling</p>
+                </div>
+              </div>
+
+              <div class="creation-body">
+                <button *ngIf="!showAgentForm" (click)="showAgentForm = true" class="btn btn-secondary">
+                  + Configure Chatbot in Pronnel
+                </button>
+
+                <div *ngIf="showAgentForm" class="creation-form">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="ag-name">Agent Name</label>
+                      <input
+                        id="ag-name"
+                        type="text"
+                        [(ngModel)]="newAgentName"
+                        placeholder="e.g. Sales Assistant"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="ag-role">Agent Role</label>
+                      <input
+                        id="ag-role"
+                        type="text"
+                        [(ngModel)]="newAgentRole"
+                        placeholder="e.g. Inbound Concierge"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="ag-temp">Creativity / Temp ({{ newAgentTemp }})</label>
+                      <input
+                        id="ag-temp"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        [(ngModel)]="newAgentTemp"
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-top: 16px;">
+                    <label for="ag-prompt">System Prompt instructions</label>
+                    <textarea
+                      id="ag-prompt"
+                      rows="3"
+                      [(ngModel)]="newAgentPrompt"
+                      placeholder="You are an helpful AI calling agent..."
+                      class="form-control"
+                      style="resize: vertical; font-family: inherit;"
+                    ></textarea>
+                  </div>
+
+                  <div class="form-actions" style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button (click)="createChatbot(currentSettings)" class="btn btn-primary" [disabled]="!newAgentName">
+                      Create Chatbot
+                    </button>
+                    <button (click)="showAgentForm = false" class="btn btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Actions footer -->
+          <div class="footer-actions">
+            <button
+              [disabled]="settingsService.saving()"
+              (click)="onSave(currentSettings)"
+              class="btn btn-primary"
+            >
+              <span *ngIf="settingsService.saving()" class="spinner-inline"></span>
+              {{ settingsService.saving() ? 'Syncing to CRM...' : 'Sync Settings with CRM' }}
+            </button>
+            <span class="sync-time" *ngIf="currentSettings.updatedAt">
+              Last Sync: {{ currentSettings.updatedAt | date:'mediumTime' }}
+            </span>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <p>No active settings configurations loaded yet.</p>
+            <button (click)="loadInitial()" class="btn btn-secondary">Force Reload</button>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+</div>
