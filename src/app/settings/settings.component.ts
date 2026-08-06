@@ -30,20 +30,6 @@ import { takeWhile } from 'rxjs/operators';
           <h1>CRM Settings Integration</h1>
           <p>This settings page translates state mapping perfectly depending on the active CRM container.</p>
         </div>
-        <div class="banner-actions">
-          <label for="platform-debug-switch" class="sr-only">Choose Platform (Debug)</label>
-          <select
-            id="platform-debug-switch"
-            [ngModel]="activePlatform()"
-            (ngModelChange)="onPlatformSwitch($event)"
-            class="platform-select"
-          >
-            <option value="mock">Sandbox Standalone</option>
-            <option value="hubspot">HubSpot Portal</option>
-            <option value="zoho">Zoho CRM Widget</option>
-            <option value="salesforce">Salesforce Canvas</option>
-          </select>
-        </div>
       </header>
 
       <main class="settings-container">
