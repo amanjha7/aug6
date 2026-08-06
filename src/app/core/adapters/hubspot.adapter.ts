@@ -34,7 +34,7 @@ export class HubSpotAdapter implements CrmAdapter {
     if (!portalId || !userEmail) {
       return of(false);
     }
-    const url = `https://developerapi80.pronnel.com/api1/app/oauth/connection/validate?portalid=${portalId}&useremail=${encodeURIComponent(userEmail)}`;
+    const url = `https://developerapi80.pronnel.com/api1/app/oauth/connection/validate?portalId=${portalId}&userEmail=${encodeURIComponent(userEmail)}`;
 
     // Fallback/Mock for sandbox testing environments where external servers might time out
     // or block requests.
