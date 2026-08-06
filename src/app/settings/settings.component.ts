@@ -72,43 +72,202 @@ import { takeWhile } from 'rxjs/operators';
         <div *ngIf="activePlatform() !== 'hubspot' || settingsService.isConnected()" class="layout-grid">
           <!-- Main settings controls -->
           <div class="main-column">
+            <!-- Tabs Navigation for HubSpot -->
+            <div *ngIf="activePlatform() === 'hubspot'" class="tabs-navigation">
+              <button
+                class="tab-btn"
+                [class.active]="activeTab === 'channels'"
+                (click)="activeTab = 'channels'"
+              >
+                📞 Channels Integration
+              </button>
+              <button
+                class="tab-btn"
+                [class.active]="activeTab === 'chatbots'"
+                (click)="activeTab = 'chatbots'"
+              >
+                🤖 AI Chatbots / Agents
+              </button>
+            </div>
+
             @if (settingsService.loading()) {
               <div class="loading-spinner">
                 <div class="spinner"></div>
                 <p>Establishing communication & loading CRM configurations...</p>
               </div>
             } @else if (settingsService.settings(); as currentSettings) {
-              <!-- Auto Response Switch -->
-              <div class="card toggle-card">
-                <div class="toggle-row">
-                  <div class="toggle-text">
-                    <h3>Autopilot Instant Response</h3>
-                    <p>Trigger instant AI voice and text replies upon detecting inbound CRM communication</p>
+
+              <!-- Channels Tab Content -->
+              <div *ngIf="activePlatform() !== 'hubspot' || activeTab === 'channels'">
+                <!-- Auto Response Switch -->
+                <div class="card toggle-card">
+                  <div class="toggle-row">
+                    <div class="toggle-text">
+                      <h3>Autopilot Instant Response</h3>
+                      <p>Trigger instant AI voice and text replies upon detecting inbound CRM communication</p>
+                    </div>
+                    <label class="switch large">
+                      <input
+                        type="checkbox"
+                        [checked]="currentSettings.autoResponseEnabled"
+                        (change)="toggleAutopilot(currentSettings)"
+                      />
+                      <span class="slider round"></span>
+                    </label>
                   </div>
-                  <label class="switch large">
-                    <input
-                      type="checkbox"
-                      [checked]="currentSettings.autoResponseEnabled"
-                      (change)="toggleAutopilot(currentSettings)"
-                    />
-                    <span class="slider round"></span>
-                  </label>
+                </div>
+
+                <!-- Channel list component -->
+                <app-channel-list
+                  [channels]="currentSettings.channels"
+                  (channelsChange)="onChannelsChange(currentSettings, $event)"
+                ></app-channel-list>
+
+                <!-- Create Channel Placeholder Card (Pronnel integration) -->
+                <div class="card creation-card" *ngIf="activePlatform() === 'hubspot'">
+                  <div class="creation-header">
+                    <span class="header-icon">📞</span>
+                    <div class="header-text">
+                      <h3>Register New Channel</h3>
+                      <p class="notice-badge">ℹ️ Note: This channel will be created and hosted in Pronnel for AI calling</p>
+                    </div>
+                  </div>
+
+                  <div class="creation-body">
+                    <button *ngIf="!showChannelForm" (click)="showChannelForm = true" class="btn btn-secondary">
+                      + Register Channel in Pronnel
+                    </button>
+
+                    <div *ngIf="showChannelForm" class="creation-form">
+                      <div class="form-grid">
+                        <div class="form-group">
+                          <label for="ch-name">Channel Name</label>
+                          <input
+                            id="ch-name"
+                            type="text"
+                            [(ngModel)]="newChannelName"
+                            placeholder="e.g. HubSpot Support Line"
+                            class="form-control"
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label for="ch-type">Channel Type</label>
+                          <select id="ch-type" [(ngModel)]="newChannelType" class="form-control">
+                            <option value="sms">SMS / Texting</option>
+                            <option value="voice">AI Voice Call</option>
+                            <option value="whatsapp">WhatsApp Business</option>
+                          </select>
+                        </div>
+                        <div class="form-group">
+                          <label for="ch-phone">Phone Number</label>
+                          <input
+                            id="ch-phone"
+                            type="text"
+                            [(ngModel)]="newChannelPhone"
+                            placeholder="e.g. +1 (555) 019-2834"
+                            class="form-control"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="form-actions" style="margin-top: 16px; display: flex; gap: 8px;">
+                        <button (click)="createChannel(currentSettings)" class="btn btn-primary" [disabled]="!newChannelName">
+                          Create Channel
+                        </button>
+                        <button (click)="showChannelForm = false" class="btn btn-secondary">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Channel list component -->
-              <app-channel-list
-                [channels]="currentSettings.channels"
-                (channelsChange)="onChannelsChange(currentSettings, $event)"
-              ></app-channel-list>
+              <!-- Chatbots Tab Content -->
+              <div *ngIf="activePlatform() !== 'hubspot' || activeTab === 'chatbots'">
+                <!-- Agent configurations component -->
+                <app-agent-select
+                  [agents]="currentSettings.agents"
+                  [selectedAgentId]="currentSettings.defaultAgentId"
+                  (agentsChange)="onAgentsChange(currentSettings, $event)"
+                  (selectedAgentIdChange)="onDefaultAgentIdChange(currentSettings, $event)"
+                ></app-agent-select>
 
-              <!-- Agent configurations component -->
-              <app-agent-select
-                [agents]="currentSettings.agents"
-                [selectedAgentId]="currentSettings.defaultAgentId"
-                (agentsChange)="onAgentsChange(currentSettings, $event)"
-                (selectedAgentIdChange)="onDefaultAgentIdChange(currentSettings, $event)"
-              ></app-agent-select>
+                <!-- Create Chatbot Placeholder Card (Pronnel integration) -->
+                <div class="card creation-card" *ngIf="activePlatform() === 'hubspot'">
+                  <div class="creation-header">
+                    <span class="header-icon">🤖</span>
+                    <div class="header-text">
+                      <h3>Configure New Chatbot Agent</h3>
+                      <p class="notice-badge">ℹ️ Note: This chatbot will be created and hosted in Pronnel for AI calling</p>
+                    </div>
+                  </div>
+
+                  <div class="creation-body">
+                    <button *ngIf="!showAgentForm" (click)="showAgentForm = true" class="btn btn-secondary">
+                      + Configure Chatbot in Pronnel
+                    </button>
+
+                    <div *ngIf="showAgentForm" class="creation-form">
+                      <div class="form-grid">
+                        <div class="form-group">
+                          <label for="ag-name">Agent Name</label>
+                          <input
+                            id="ag-name"
+                            type="text"
+                            [(ngModel)]="newAgentName"
+                            placeholder="e.g. Sales Assistant"
+                            class="form-control"
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label for="ag-role">Agent Role</label>
+                          <input
+                            id="ag-role"
+                            type="text"
+                            [(ngModel)]="newAgentRole"
+                            placeholder="e.g. Inbound Concierge"
+                            class="form-control"
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label for="ag-temp">Creativity / Temp ({{ newAgentTemp }})</label>
+                          <input
+                            id="ag-temp"
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            [(ngModel)]="newAgentTemp"
+                            class="form-control"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="form-group" style="margin-top: 16px;">
+                        <label for="ag-prompt">System Prompt instructions</label>
+                        <textarea
+                          id="ag-prompt"
+                          rows="3"
+                          [(ngModel)]="newAgentPrompt"
+                          placeholder="You are an helpful AI calling agent..."
+                          class="form-control"
+                          style="resize: vertical; font-family: inherit;"
+                        ></textarea>
+                      </div>
+
+                      <div class="form-actions" style="margin-top: 16px; display: flex; gap: 8px;">
+                        <button (click)="createChatbot(currentSettings)" class="btn btn-primary" [disabled]="!newAgentName">
+                          Create Chatbot
+                        </button>
+                        <button (click)="showAgentForm = false" class="btn btn-secondary">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <!-- Save Actions footer -->
               <div class="footer-actions">
@@ -217,6 +376,36 @@ import { takeWhile } from 'rxjs/operators';
       color: #1e293b;
     }
 
+    /* Tabs Navigation Styling */
+    .tabs-navigation {
+      display: flex;
+      border-bottom: 2px solid #cbd5e1;
+      margin-bottom: 28px;
+      gap: 12px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn:hover {
+      color: #ff7a59;
+    }
+    .tab-btn.active {
+      color: #ff7a59;
+      border-bottom-color: #ff7a59;
+    }
+
     .settings-container {
       max-width: 1280px;
       margin: 0 auto;
@@ -306,6 +495,69 @@ import { takeWhile } from 'rxjs/operators';
       margin-bottom: 24px;
       padding: 20px;
     }
+    .creation-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      margin-top: 24px;
+      padding: 24px;
+    }
+    .creation-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+    .header-icon {
+      font-size: 2.2rem;
+    }
+    .creation-header h3 {
+      margin: 0 0 4px 0;
+      font-size: 1.2rem;
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .notice-badge {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #ff7a59;
+      font-weight: 600;
+      background-color: #fffaf0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px dashed #ff7a59;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .form-control {
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      border-color: #ff7a59;
+    }
+
     .toggle-row {
       display: flex;
       justify-content: space-between;
@@ -532,6 +784,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   protected readonly postMessageService: PostMessageService;
   protected showSuccess = false;
   protected isPolling = false;
+  protected activeTab: 'channels' | 'chatbots' = 'channels';
   private pollSub?: Subscription;
 
   constructor(settingsService: SettingsService, postMessageService: PostMessageService) {
@@ -577,6 +830,77 @@ export class SettingsComponent implements OnInit, OnDestroy {
       ...current,
       autoResponseEnabled: !current.autoResponseEnabled,
     });
+  }
+
+  // --- Channel Form & Mock Creation ---
+  protected newChannelName = '';
+  protected newChannelType: 'sms' | 'whatsapp' | 'voice' = 'sms';
+  protected newChannelPhone = '';
+  protected showChannelForm = false;
+
+  createChannel(current: Settings): void {
+    if (!this.newChannelName.trim()) {
+      return;
+    }
+    const newCh = {
+      id: 'ch_new_' + Math.random().toString(36).substring(2, 6),
+      name: this.newChannelName,
+      type: this.newChannelType,
+      enabled: true,
+      connectedPhone: this.newChannelPhone || '+1 (555) 000-0000'
+    };
+    const updatedChannels = [...current.channels, newCh];
+    this.settingsService.settings.set({ ...current, channels: updatedChannels });
+
+    // Reset form
+    this.newChannelName = '';
+    this.newChannelType = 'sms';
+    this.newChannelPhone = '';
+    this.showChannelForm = false;
+
+    // Visual success
+    this.showSuccess = true;
+    setTimeout(() => (this.showSuccess = false), 4000);
+  }
+
+  // --- Chatbot Form & Mock Creation ---
+  protected newAgentName = '';
+  protected newAgentRole = '';
+  protected newAgentPrompt = '';
+  protected newAgentTemp = 0.7;
+  protected showAgentForm = false;
+
+  createChatbot(current: Settings): void {
+    if (!this.newAgentName.trim()) {
+      return;
+    }
+    const newAgent = {
+      id: 'ag_new_' + Math.random().toString(36).substring(2, 6),
+      name: this.newAgentName,
+      role: this.newAgentRole || 'Support Specialist',
+      temperature: this.newAgentTemp,
+      provider: 'openai' as const,
+      systemPrompt: this.newAgentPrompt || 'You are an AI calling agent.'
+    };
+    const updatedAgents = [...current.agents, newAgent];
+    const defaultId = current.defaultAgentId || newAgent.id;
+
+    this.settingsService.settings.set({
+      ...current,
+      agents: updatedAgents,
+      defaultAgentId: defaultId
+    });
+
+    // Reset form
+    this.newAgentName = '';
+    this.newAgentRole = '';
+    this.newAgentPrompt = '';
+    this.newAgentTemp = 0.7;
+    this.showAgentForm = false;
+
+    // Visual success
+    this.showSuccess = true;
+    setTimeout(() => (this.showSuccess = false), 4000);
   }
 
   onSave(currentSettings: Settings): void {

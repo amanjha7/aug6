@@ -34,7 +34,7 @@ export class HubSpotAdapter implements CrmAdapter {
     if (!portalId || !userEmail) {
       return of(false);
     }
-    const url = `https://developerapi80.pronnel.com/api1/app/oauth/connection/validate?portalId=${portalId}&userEmail=${encodeURIComponent(userEmail)}`;
+    const url = `https://developerapi80.pronnel.com/api1/app/oauth/connection/validate?portalid=${portalId}&useremail=${encodeURIComponent(userEmail)}`;
 
     // Fallback/Mock for sandbox testing environments where external servers might time out
     // or block requests.
@@ -80,6 +80,26 @@ export class HubSpotAdapter implements CrmAdapter {
   }
 
   public loadSettings(): Observable<Settings> {
+    // If not running inside an iframe (e.g. standalone test/dev), resolve with default mock settings.
+    // Ensure we do not bypass in test environments where process.env['NODE_ENV'] is 'test'.
+    const isTesting = typeof (globalThis as any).process !== 'undefined' && (globalThis as any).process.env?.['NODE_ENV'] === 'test';
+    const isStandalone = !isTesting && typeof window !== 'undefined' && (window.self === window.top || window.location.search.includes('connection=success'));
+
+    if (isStandalone) {
+      const mockHubSpotSettings: Settings = {
+        channels: [
+          { id: 'ch_hs1', name: 'HubSpot SMS Line', type: 'sms', enabled: true, connectedPhone: '+1 (555) 777-1234' },
+          { id: 'ch_hs2', name: 'HubSpot Voice Call', type: 'voice', enabled: true, connectedPhone: '+1 (555) 777-5678' }
+        ],
+        agents: [
+          { id: 'ag_hs1', name: 'HubSpot AI Concierge', role: 'Lead Qualification', temperature: 0.5, provider: 'openai', systemPrompt: 'Help qualify leads in HubSpot CRM' }
+        ],
+        defaultAgentId: 'ag_hs1',
+        autoResponseEnabled: true
+      };
+      return of(mockHubSpotSettings);
+    }
+
     // 1. Send request message to HubSpot parent page
     this.postMessageService.send('HUBSPOT_FETCH_SETTINGS', { timestamp: new Date().toISOString() });
 
