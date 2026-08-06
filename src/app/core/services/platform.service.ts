@@ -7,6 +7,8 @@ export type PlatformType = 'zoho' | 'hubspot' | 'salesforce' | 'mock';
 })
 export class PlatformService {
   private activePlatform: PlatformType = 'mock';
+  public userEmail: string = '';
+  public portalId: string = '';
 
   constructor() {
     this.detectPlatform();
@@ -14,7 +16,7 @@ export class PlatformService {
 
   /**
    * Detect platform from URL parameters.
-   * e.g., ?platform=zoho
+   * e.g., ?platform=zoho&portalid=123&useremail=test@email.com
    */
   private detectPlatform(): void {
     if (typeof window !== 'undefined') {
@@ -25,6 +27,10 @@ export class PlatformService {
       } else {
         this.activePlatform = 'mock';
       }
+
+      // Handle case-insensitive/variation of query parameter names
+      this.portalId = params.get('portalid') || params.get('portalId') || '';
+      this.userEmail = params.get('useremail') || params.get('userEmail') || '';
     }
   }
 

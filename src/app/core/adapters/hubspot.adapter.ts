@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, map, take } from 'rxjs';
+import { Observable, map, take, from, of, catchError } from 'rxjs';
 import { CrmAdapter } from './adapter.interface';
 import { Settings } from '../models/settings.model';
 import { Channel } from '../models/channel.model';
@@ -26,6 +26,58 @@ export interface HubSpotSettingsPayload {
 })
 export class HubSpotAdapter implements CrmAdapter {
   constructor(private postMessageService: PostMessageService) {}
+
+  /**
+   * Validate current OAuth connection via the GET endpoint with a fast abort/timeout.
+   */
+  public validateConnection(portalId: string, userEmail: string): Observable<boolean> {
+    if (!portalId || !userEmail) {
+      return of(false);
+    }
+    const url = `https://developerapi80.pronnel.com/api1/app/oauth/connection/validate?portalid=${portalId}&useremail=${encodeURIComponent(userEmail)}`;
+
+    // Fallback/Mock for sandbox testing environments where external servers might time out
+    // or block requests.
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      // Allow testing HubSpot with connection=mock, or default to false so they can see the OAuth button.
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('connection') === 'success') {
+        return of(true);
+      }
+      // Continue to try fetch, but if it fails/times out, we return false so users see the connect button.
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+
+    return from(
+      fetch(url, { signal: controller.signal })
+        .then((res) => {
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error('Network response not ok');
+          return res.json();
+        })
+        .catch((err) => {
+          clearTimeout(timeoutId);
+          throw err;
+        })
+    ).pipe(
+      map((res: any) => {
+        return res && (res.status === 'success' || res.status === 'connected' || res.success === true);
+      }),
+      catchError((err) => {
+        console.error('HubSpot connection validation failed:', err);
+        return of(false);
+      })
+    );
+  }
+
+  /**
+   * Get the OAuth initialization URL.
+   */
+  public getOAuthUrl(portalId: string, userEmail: string): string {
+    return `https://developerapi80.pronnel.com/api1/app/oauth/init?portalId=${portalId}&userEmail=${encodeURIComponent(userEmail)}`;
+  }
 
   public loadSettings(): Observable<Settings> {
     // 1. Send request message to HubSpot parent page

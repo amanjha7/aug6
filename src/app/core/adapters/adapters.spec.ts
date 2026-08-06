@@ -84,6 +84,28 @@ describe('CRM Adapters Translation Logic', () => {
         })
       }));
     });
+
+    it('should construct correct OAuth initialized connection URL', () => {
+      const adapter = new HubSpotAdapter(postMessageService);
+      const url = adapter.getOAuthUrl('456', 'foo@bar.com');
+      expect(url).toContain('portalId=456');
+      expect(url).toContain('userEmail=foo%40bar.com');
+    });
+
+    it('should validate connection using check connection GET endpoint', async () => {
+      const adapter = new HubSpotAdapter(postMessageService);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ status: 'success' })
+        } as Response);
+      });
+
+      const validated = await firstValueFrom(adapter.validateConnection('456', 'foo@bar.com'));
+      expect(fetchSpy.mock.calls[0][0]).toContain('validate?portalid=456&useremail=foo%40bar.com');
+      expect(validated).toBe(true);
+      fetchSpy.mockRestore();
+    });
   });
 
   describe('ZohoAdapter', () => {

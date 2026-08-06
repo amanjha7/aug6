@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SettingsService } from '../core/services/settings.service';
@@ -9,6 +9,8 @@ import { Channel } from '../core/models/channel.model';
 import { AIAgent } from '../core/models/ai-agent.model';
 import { Settings } from '../core/models/settings.model';
 import { PlatformType } from '../core/services/platform.service';
+import { Subscription, interval } from 'rxjs';
+import { takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-settings',
@@ -55,7 +57,33 @@ import { PlatformType } from '../core/services/platform.service';
           <strong>Success:</strong> Settings payload sent and successfully updated in CRM!
         </div>
 
-        <div class="layout-grid">
+        <!-- Connection Screen for HubSpot OAuth (if disconnected) -->
+        <div *ngIf="activePlatform() === 'hubspot' && !settingsService.isConnected()" class="connection-screen">
+          <div class="card connection-card">
+            <div class="connection-header">
+              <span class="hubspot-logo">🟠</span>
+              <h2>Connect with HubSpot</h2>
+              <p>Authorize this AI application to access and manage your communication channels and bots.</p>
+            </div>
+
+            <div class="connection-body">
+              <button
+                [disabled]="settingsService.checkingConnection() || isPolling"
+                (click)="connectToHubspot()"
+                class="btn btn-primary oauth-btn"
+              >
+                {{ isPolling ? 'Connecting and verifying...' : 'Connect to HubSpot' }}
+              </button>
+
+              <div *ngIf="isPolling" class="polling-indicator">
+                <div class="spinner"></div>
+                <p>Waiting for OAuth connection to complete in the new tab...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="activePlatform() !== 'hubspot' || settingsService.isConnected()" class="layout-grid">
           <!-- Main settings controls -->
           <div class="main-column">
             @if (settingsService.loading()) {
@@ -223,6 +251,50 @@ import { PlatformType } from '../core/services/platform.service';
       background-color: #f0fdf4;
       border: 1px solid #86efac;
       color: #166534;
+    }
+
+    /* Connection Card Styling */
+    .connection-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 0;
+    }
+    .connection-card {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      max-width: 480px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+    .hubspot-logo {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 20px;
+    }
+    .connection-header h2 {
+      margin: 0 0 10px 0;
+      color: #1e293b;
+      font-size: 1.6rem;
+    }
+    .connection-header p {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .oauth-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      border-radius: 8px;
+    }
+    .polling-indicator {
+      margin-top: 24px;
+      color: #64748b;
+      font-size: 0.88rem;
     }
 
     .layout-grid {
@@ -469,10 +541,12 @@ import { PlatformType } from '../core/services/platform.service';
     }
   `]
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
   protected readonly settingsService: SettingsService;
   protected readonly postMessageService: PostMessageService;
   protected showSuccess = false;
+  protected isPolling = false;
+  private pollSub?: Subscription;
 
   constructor(settingsService: SettingsService, postMessageService: PostMessageService) {
     this.settingsService = settingsService;
@@ -481,6 +555,10 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInitial();
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
   }
 
   loadInitial(): void {
@@ -492,6 +570,7 @@ export class SettingsComponent implements OnInit {
   }
 
   onPlatformSwitch(platform: PlatformType): void {
+    this.stopPolling();
     this.settingsService.changePlatform(platform);
   }
 
@@ -521,5 +600,44 @@ export class SettingsComponent implements OnInit {
         setTimeout(() => (this.showSuccess = false), 4000);
       }
     });
+  }
+
+  /**
+   * Triggers the HubSpot OAuth connection flow.
+   * Opens in a new tab, then begins polling to validate connection state.
+   */
+  connectToHubspot(): void {
+    const oauthUrl = this.settingsService.getHubspotOAuthUrl();
+    if (typeof window !== 'undefined') {
+      window.open(oauthUrl, '_blank');
+    }
+    this.startPolling();
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    this.isPolling = true;
+
+    // Check every 3 seconds, up to 10 minutes max (200 times)
+    let checksLeft = 200;
+    this.pollSub = interval(3000).pipe(
+      takeWhile(() => checksLeft > 0 && this.isPolling)
+    ).subscribe(() => {
+      checksLeft--;
+      this.settingsService.checkHubspotConnectionState().subscribe((connected) => {
+        if (connected) {
+          this.stopPolling();
+          this.loadInitial();
+        }
+      });
+    });
+  }
+
+  private stopPolling(): void {
+    this.isPolling = false;
+    if (this.pollSub) {
+      this.pollSub.unsubscribe();
+      this.pollSub = undefined;
+    }
   }
 }
