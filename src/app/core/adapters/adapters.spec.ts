@@ -106,6 +106,28 @@ describe('CRM Adapters Translation Logic', () => {
       expect(validated).toBe(true);
       fetchSpy.mockRestore();
     });
+
+    it('should retry connection validation up to maxAttempts when request fails / cancels', async () => {
+      const adapter = new HubSpotAdapter(postMessageService);
+      let callCount = 0;
+
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+        callCount++;
+        if (callCount < 3) {
+          // Simulate an abort error/network exception for first two calls
+          return Promise.reject(new Error('The user aborted a request.'));
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ status: 'success' })
+        } as Response);
+      });
+
+      const validated = await firstValueFrom(adapter.validateConnection('456', 'foo@bar.com'));
+      expect(callCount).toBe(3);
+      expect(validated).toBe(true);
+      fetchSpy.mockRestore();
+    });
   });
 
   describe('ZohoAdapter', () => {

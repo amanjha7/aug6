@@ -28,7 +28,41 @@ export class HubSpotAdapter implements CrmAdapter {
   constructor(private postMessageService: PostMessageService) {}
 
   /**
-   * Validate current OAuth connection via the GET endpoint with a fast abort/timeout.
+   * Performs fetch with automatic retries on abort / cancellation / network errors.
+   */
+  private fetchWithRetry(url: string, maxAttempts = 3, timeoutMs = 1500): Promise<any> {
+    let attempt = 0;
+
+    const execute = (): Promise<any> => {
+      attempt++;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, timeoutMs * attempt); // Scale timeout with attempt duration
+
+      return fetch(url, { signal: controller.signal })
+        .then((res) => {
+          clearTimeout(timeoutId);
+          if (!res.ok) {
+            throw new Error(`Network response not ok (status: ${res.status})`);
+          }
+          return res.json();
+        })
+        .catch((err) => {
+          clearTimeout(timeoutId);
+          if (attempt < maxAttempts) {
+            console.warn(`HubSpot validation attempt ${attempt} failed or was cancelled. Retrying... Error:`, err);
+            return new Promise((resolve) => setTimeout(resolve, 100 * attempt)).then(() => execute());
+          }
+          throw err;
+        });
+    };
+
+    return execute();
+  }
+
+  /**
+   * Validate current OAuth connection via the GET endpoint with auto-retry on cancel/fail.
    */
   public validateConnection(portalId: string, userEmail: string): Observable<boolean> {
     if (!portalId || !userEmail) {
@@ -47,26 +81,12 @@ export class HubSpotAdapter implements CrmAdapter {
       // Continue to try fetch, but if it fails/times out, we return false so users see the connect button.
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
-
-    return from(
-      fetch(url, { signal: controller.signal })
-        .then((res) => {
-          clearTimeout(timeoutId);
-          if (!res.ok) throw new Error('Network response not ok');
-          return res.json();
-        })
-        .catch((err) => {
-          clearTimeout(timeoutId);
-          throw err;
-        })
-    ).pipe(
+    return from(this.fetchWithRetry(url)).pipe(
       map((res: any) => {
         return res && (res.status === 'success' || res.status === 'connected' || res.success === true);
       }),
       catchError((err) => {
-        console.error('HubSpot connection validation failed:', err);
+        console.error('HubSpot connection validation failed after all retries:', err);
         return of(false);
       })
     );
