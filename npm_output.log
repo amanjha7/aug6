@@ -1,0 +1,17 @@
+
+> generic-settings-page-aicallapp@0.0.0 start
+> ng serve
+
+❯ Building...
+✔ Building...
+Initial chunk files | Names         | Raw size
+main.js             | main          | 94.30 kB |
+styles.css          | styles        | 96 bytes |
+
+                    | Initial total | 94.40 kB
+
+Application bundle generation complete. [3.310 seconds] - 2026-08-06T08:08:00.035Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://localhost:4200/
