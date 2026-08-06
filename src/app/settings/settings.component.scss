@@ -1,0 +1,377 @@
+.settings-wrapper {
+  min-height: 100%;
+  background-color: #f8fafc;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.crm-banner {
+  color: #ffffff;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  transition: background-color 0.3s ease;
+}
+.crm-banner.mock { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+.crm-banner.hubspot { background: linear-gradient(135deg, #ff7a59 0%, #d9532f 100%); }
+.crm-banner.zoho { background: linear-gradient(135deg, #15803d 0%, #14532d 100%); }
+.crm-banner.salesforce { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); }
+
+.banner-content h1 {
+  margin: 8px 0 4px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.banner-content p {
+  margin: 0;
+  opacity: 0.85;
+  font-size: 0.9rem;
+}
+.platform-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.platform-select {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  outline: none;
+}
+.platform-select option {
+  color: #1e293b;
+}
+
+/* Tabs Navigation Styling */
+.tabs-navigation {
+  display: flex;
+  border-bottom: 2px solid #cbd5e1;
+  margin-bottom: 28px;
+  gap: 12px;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tab-btn:hover {
+  color: #ff7a59;
+}
+.tab-btn.active {
+  color: #ff7a59;
+  border-bottom-color: #ff7a59;
+}
+
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px;
+}
+.alert {
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  margin-bottom: 24px;
+}
+.error-alert {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+.success-alert {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+/* Connection Card Styling */
+.connection-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+}
+.connection-card {
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  max-width: 480px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+.hubspot-logo {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 20px;
+}
+.connection-header h2 {
+  margin: 0 0 10px 0;
+  color: #1e293b;
+  font-size: 1.6rem;
+}
+.connection-header p {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.oauth-btn {
+  width: 100%;
+  margin-top: 24px;
+  padding: 14px 28px;
+  font-size: 1.05rem;
+  border-radius: 8px;
+}
+.polling-indicator {
+  margin-top: 24px;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.layout-content {
+  display: block;
+}
+
+.main-column {
+  display: flex;
+  flex-direction: column;
+}
+.toggle-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+  padding: 20px;
+}
+.creation-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  margin-top: 24px;
+  padding: 24px;
+}
+.creation-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+}
+.header-icon {
+  font-size: 2.2rem;
+}
+.creation-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+.notice-badge {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #ff7a59;
+  font-weight: 600;
+  background-color: #fffaf0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px dashed #ff7a59;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+.form-control {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-control:focus {
+  border-color: #ff7a59;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.toggle-text h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+.toggle-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+.btn {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+.btn-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background-color: #e2e8f0;
+  color: #334155;
+}
+.sync-time {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+}
+.spinner {
+  border: 4px solid rgba(0,0,0,0.1);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+.spinner-inline {
+  display: inline-block;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Global Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .3s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+}
+input:checked + .slider {
+  background-color: #2563eb;
+}
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+.switch.large {
+  width: 52px;
+  height: 28px;
+}
+.switch.large .slider:before {
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+}
+input:checked + .switch.large .slider:before {
+  transform: translateX(24px);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
