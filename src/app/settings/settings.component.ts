@@ -123,7 +123,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         serverPort: '5060',
         username: '9497035648_1204797517',
         authUsername: '9497035648_1204797517',
-        authPassword: 'cTw2DkBQG5'
+        authPassword: 'PLACEHOLDER_MOCK_PASSWORD'
       }
     };
     this.newChannelName = '';
