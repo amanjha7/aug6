@@ -1,0 +1,288 @@
+<div class="sip-editor-container">
+  <div class="editor-header">
+    <h2>Configure SIP Calling Channel</h2>
+    <p class="subtitle">Customize inbound and outbound session initiation protocol (SIP) options for Pronnel Calling.</p>
+  </div>
+
+  <div class="editor-body">
+    <!-- Channel Metadata & Toggles -->
+    <div class="card basic-card">
+      <div class="form-row flex-row">
+        <div class="form-group flex-1">
+          <label for="editor-ch-name">Channel Name</label>
+          <input
+            id="editor-ch-name"
+            type="text"
+            [(ngModel)]="editChannel.name"
+            class="form-control"
+            placeholder="e.g. Feb10 Calling Channel"
+          />
+        </div>
+        <div class="form-group flex-1">
+          <label>Capabilities</label>
+          <div class="checkbox-row">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                name="incoming"
+                [(ngModel)]="editChannel.incoming"
+                (change)="onTypeChange()"
+              />
+              <span class="checkbox-custom"></span>
+              Incoming Calls
+            </label>
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                name="outgoing"
+                [(ngModel)]="editChannel.outgoing"
+                (change)="onTypeChange()"
+              />
+              <span class="checkbox-custom"></span>
+              Outgoing Calls
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INCOMING / INBOUND SECTION -->
+    <div *ngIf="editChannel.incoming" class="accordion-section">
+      <div class="accordion-header" (click)="toggleIncomingAccordion()">
+        <h3>📥 Inbound / Trunk Configuration</h3>
+        <span class="arrow">{{ incomingOpen() ? '▼' : '▶' }}</span>
+      </div>
+
+      <div *ngIf="incomingOpen()" class="accordion-content">
+        <!-- Trunk connection status -->
+        <div class="trunk-status-banner" [ngClass]="editChannel.trunkStatus">
+          <div class="status-info">
+            <span class="indicator-dot"></span>
+            <strong>Trunk Connection:</strong>
+            <span class="status-text">{{ editChannel.trunkStatus | uppercase }}</span>
+          </div>
+          <button (click)="reloadTrunkStatus()" class="btn btn-sm btn-outline-primary" type="button">
+            🔄 Refresh Connectivity
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Selected Calling Resource</label>
+            <div class="input-with-actions">
+              <input
+                type="text"
+                [value]="editChannel.resource || 'No Resource Selected'"
+                class="form-control"
+                disabled
+              />
+              <button
+                *ngIf="!editChannel.resource"
+                (click)="selectResource()"
+                class="btn btn-sm btn-primary"
+                type="button"
+              >
+                Select Resource
+              </button>
+              <button
+                *ngIf="editChannel.resource"
+                (click)="clearResource()"
+                class="btn btn-sm btn-danger"
+                type="button"
+              >
+                Clear
+              </button>
+            </div>
+            <p class="help-text">Choose the SIP Trunk routing group resource for incoming calls.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="country-prefix">Country Prefix & Mobile Number</label>
+            <div class="phone-input-row">
+              <input
+                id="country-prefix"
+                type="text"
+                [(ngModel)]="editChannel.countryPrefix"
+                class="form-control prefix-input"
+                placeholder="+91"
+              />
+              <input
+                id="mobile-number"
+                type="text"
+                [(ngModel)]="editChannel.mobileNumber"
+                class="form-control mobile-input"
+                placeholder="e.g. 1204797517"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- High-fidelity Gateway Config Credentials (matching inbound.png) -->
+        <div class="gateway-config-box" *ngIf="editChannel.gatewayConfig">
+          <h4>🔐 SIP Gateway Auth Credentials</h4>
+          <p class="box-desc">Use these credentials in your local IP-PBX or SIP trunk provider settings.</p>
+
+          <div class="config-table">
+            <div class="table-row">
+              <span class="col-lbl">SIP Server IP / Host:</span>
+              <span class="col-val">
+                <code>{{ editChannel.gatewayConfig.serverIp }}</code>
+                <button (click)="copyToClipboard(editChannel.gatewayConfig.serverIp || '', 'serverIp')" class="copy-btn">
+                  {{ copiedField() === 'serverIp' ? 'Copied!' : '📋 Copy' }}
+                </button>
+              </span>
+            </div>
+
+            <div class="table-row">
+              <span class="col-lbl">SIP Port:</span>
+              <span class="col-val">
+                <code>{{ editChannel.gatewayConfig.serverPort }}</code>
+                <button (click)="copyToClipboard(editChannel.gatewayConfig.serverPort || '', 'serverPort')" class="copy-btn">
+                  {{ copiedField() === 'serverPort' ? 'Copied!' : '📋 Copy' }}
+                </button>
+              </span>
+            </div>
+
+            <div class="table-row">
+              <span class="col-lbl">Register Username:</span>
+              <span class="col-val">
+                <code>{{ editChannel.gatewayConfig.username }}</code>
+                <button (click)="copyToClipboard(editChannel.gatewayConfig.username || '', 'username')" class="copy-btn">
+                  {{ copiedField() === 'username' ? 'Copied!' : '📋 Copy' }}
+                </button>
+              </span>
+            </div>
+
+            <div class="table-row">
+              <span class="col-lbl">Auth Password:</span>
+              <span class="col-val">
+                <code>{{ showPassword() ? editChannel.gatewayConfig.authPassword : '••••••••••••' }}</code>
+                <button (click)="togglePassword()" class="copy-btn">
+                  {{ showPassword() ? '🙈 Hide' : '👁️ Show' }}
+                </button>
+                <button (click)="copyToClipboard(editChannel.gatewayConfig.authPassword || '', 'authPassword')" class="copy-btn">
+                  {{ copiedField() === 'authPassword' ? 'Copied!' : '📋 Copy' }}
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTGOING / OUTBOUND SECTION -->
+    <div *ngIf="editChannel.outgoing" class="accordion-section">
+      <div class="accordion-header">
+        <h3>📤 Outbound SIP Registration Details</h3>
+      </div>
+
+      <div class="accordion-content no-border-top">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="sip-username">SIP Username / Auth User</label>
+            <input
+              id="sip-username"
+              type="text"
+              [(ngModel)]="editChannel.sipUsername"
+              class="form-control"
+              placeholder="e.g. +918071387318"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="sip-password">SIP Password</label>
+            <div class="input-with-actions">
+              <input
+                id="sip-password"
+                [type]="showServerDomain() ? 'text' : 'password'"
+                [(ngModel)]="editChannel.sipPassword"
+                class="form-control"
+                placeholder="Enter auth secret"
+              />
+              <button (click)="toggleServerDomain()" class="btn btn-sm btn-secondary" type="button">
+                {{ showServerDomain() ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sip-domain">Server Domain / Registrar IP</label>
+            <input
+              id="sip-domain"
+              type="text"
+              [(ngModel)]="editChannel.serverDomain"
+              class="form-control"
+              placeholder="e.g. sip.india.pronnel.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="sip-port">Port Number</label>
+            <input
+              id="sip-port"
+              type="text"
+              [(ngModel)]="editChannel.portNumber"
+              class="form-control"
+              placeholder="e.g. 5060"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADDITIONAL ADVANCED SETTINGS ACCORDION (matching outbound.png) -->
+    <div class="accordion-section margin-top-16">
+      <div class="accordion-header" (click)="toggleAdditionalAccordion()">
+        <h3>⚙️ Advanced SIP & Network Settings</h3>
+        <span class="arrow">{{ additionalOpen() ? '▼' : '▶' }}</span>
+      </div>
+
+      <div *ngIf="additionalOpen()" class="accordion-content">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="adv-protocol">SIP Protocol</label>
+            <select id="adv-protocol" [(ngModel)]="editChannel.protocol" class="form-control">
+              <option value="UDP">UDP (Standard)</option>
+              <option value="TCP">TCP (Reliable connection)</option>
+              <option value="TLS">TLS (Secure / Encrypted signaling)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="adv-enc">Media Encryption</label>
+            <select id="adv-enc" [(ngModel)]="editChannel.mediaEncryption" class="form-control">
+              <option value="None">None (Unencrypted RTP)</option>
+              <option value="SRTP">SRTP (Secure RTP)</option>
+              <option value="ZRTP">ZRTP (Peer-to-Peer DH)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="adv-region">Region Gateway</label>
+            <select id="adv-region" [(ngModel)]="editChannel.region" class="form-control">
+              <option value="India">India Gateway</option>
+              <option value="US-East">US East Gateway</option>
+              <option value="Europe">Europe West Gateway</option>
+            </select>
+          </div>
+
+          <div class="form-group flex-align-center">
+            <label class="checkbox-label" style="margin-top: 24px;">
+              <input
+                type="checkbox"
+                [(ngModel)]="editChannel.restrictedCallTimings"
+              />
+              <span class="checkbox-custom"></span>
+              Restrict calling hours (DND compliance)
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="editor-footer">
+    <button (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+    <button (click)="onUpdate()" class="btn btn-primary" [disabled]="!editChannel.name">Update</button>
+  </div>
+</div>

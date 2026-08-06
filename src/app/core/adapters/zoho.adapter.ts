@@ -16,7 +16,7 @@ export interface ZohoSettingsPayload {
     communicationChannels: {
       uid: string;
       title: string;
-      kind: 'sms' | 'whatsapp' | 'voice' | 'email';
+      kind: 'sms' | 'whatsapp' | 'voice' | 'email' | 'sip';
       isActive: boolean;
       phoneNumber?: string;
     }[];

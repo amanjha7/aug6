@@ -5,6 +5,7 @@ import { SettingsService } from '../core/services/settings.service';
 import { PostMessageService } from '../core/services/post-message.service';
 import { ChannelListComponent } from './channel-list/channel-list.component';
 import { AgentSelectComponent } from './agent-select/agent-select.component';
+import { SipChannelEditorComponent } from './sip-channel-editor/sip-channel-editor.component';
 import { Channel } from '../core/models/channel.model';
 import { AIAgent } from '../core/models/ai-agent.model';
 import { Settings } from '../core/models/settings.model';
@@ -20,6 +21,7 @@ import { takeWhile } from 'rxjs/operators';
     FormsModule,
     ChannelListComponent,
     AgentSelectComponent,
+    SipChannelEditorComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
@@ -79,9 +81,70 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // --- Channel Form & Mock Creation ---
   protected newChannelName = '';
-  protected newChannelType: 'sms' | 'whatsapp' | 'voice' = 'sms';
+  protected newChannelType: 'sms' | 'whatsapp' | 'voice' | 'sip' = 'sms';
   protected newChannelPhone = '';
   protected showChannelForm = false;
+
+  // --- SIP Channel Form & Editor State ---
+  protected activeSipChannel: Channel | null = null;
+  protected showSipChannelForm = false;
+
+  startSipCreation(): void {
+    this.showSipChannelForm = true;
+    this.showChannelForm = false;
+  }
+
+  createSipChannelPlaceholder(): void {
+    if (!this.newChannelName.trim()) {
+      return;
+    }
+    this.activeSipChannel = {
+      id: 'sip_' + Math.random().toString(36).substring(2, 6),
+      name: this.newChannelName,
+      type: 'sip',
+      enabled: true,
+      incoming: true,
+      outgoing: true,
+      countryPrefix: '+91',
+      mobileNumber: this.newChannelPhone || '1204797517',
+      resource: 'C517India',
+      sipUsername: '',
+      sipPassword: '',
+      portNumber: '5060',
+      serverDomain: '',
+      protocol: 'TCP',
+      mediaEncryption: 'None',
+      region: 'India',
+      restrictedCallTimings: false,
+      registration: false,
+      trunkStatus: 'disconnected',
+      gatewayConfig: {
+        serverIp: 'sip.india.pronnel.com',
+        serverPort: '5060',
+        username: '9497035648_1204797517',
+        authUsername: '9497035648_1204797517',
+        authPassword: 'cTw2DkBQG5'
+      }
+    };
+    this.newChannelName = '';
+    this.newChannelPhone = '';
+    this.showSipChannelForm = false;
+  }
+
+  saveSipChannel(updatedChannel: Channel, current: Settings): void {
+    const exists = current.channels.some(c => c.id === updatedChannel.id);
+    let updatedChannels: Channel[];
+    if (exists) {
+      updatedChannels = current.channels.map(c => c.id === updatedChannel.id ? updatedChannel : c);
+    } else {
+      updatedChannels = [...current.channels, updatedChannel];
+    }
+
+    this.settingsService.settings.set({ ...current, channels: updatedChannels });
+    this.activeSipChannel = null;
+    this.showSuccess = true;
+    setTimeout(() => (this.showSuccess = false), 4000);
+  }
 
   createChannel(current: Settings): void {
     if (!this.newChannelName.trim()) {

@@ -73,8 +73,17 @@
           </div>
         } @else if (settingsService.settings(); as currentSettings) {
 
+          <!-- SIP Editor display taking absolute priority when editing/creating -->
+          <div *ngIf="activeSipChannel" style="margin-bottom: 24px;">
+            <app-sip-channel-editor
+              [channelInput]="activeSipChannel"
+              (save)="saveSipChannel($event, currentSettings)"
+              (cancel)="activeSipChannel = null"
+            ></app-sip-channel-editor>
+          </div>
+
           <!-- Channels Tab Content -->
-          <div *ngIf="activePlatform() !== 'hubspot' || activeTab === 'channels'">
+          <div *ngIf="(!activeSipChannel) && (activePlatform() !== 'hubspot' || activeTab === 'channels')">
             <!-- Autopilot Switch -->
             <div class="card toggle-card">
               <div class="toggle-row">
@@ -110,9 +119,14 @@
               </div>
 
               <div class="creation-body">
-                <button *ngIf="!showChannelForm" (click)="showChannelForm = true" class="btn btn-secondary">
-                  + Register Channel in Pronnel
-                </button>
+                <div class="registration-buttons" *ngIf="!showChannelForm && !showSipChannelForm" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <button (click)="showChannelForm = true" class="btn btn-secondary">
+                    + Register Channel in Pronnel
+                  </button>
+                  <button (click)="startSipCreation()" class="btn btn-secondary">
+                    + Register SIP Channel in Pronnel
+                  </button>
+                </div>
 
                 <div *ngIf="showChannelForm" class="creation-form">
                   <div class="form-grid">
@@ -155,12 +169,48 @@
                     </button>
                   </div>
                 </div>
+
+                <!-- Initial SIP Registration Form -->
+                <div *ngIf="showSipChannelForm" class="creation-form">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="ch-name">Channel Name</label>
+                      <input
+                        id="ch-name"
+                        type="text"
+                        [(ngModel)]="newChannelName"
+                        placeholder="e.g. Feb10"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="ch-phone">Phone Number</label>
+                      <input
+                        id="ch-phone"
+                        type="text"
+                        [(ngModel)]="newChannelPhone"
+                        placeholder="e.g. 1204797517"
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-actions" style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button (click)="createSipChannelPlaceholder()" class="btn btn-primary" [disabled]="!newChannelName">
+                      Create & Configure SIP Details
+                    </button>
+                    <button (click)="showSipChannelForm = false" class="btn btn-secondary">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
 
           <!-- Chatbots Tab Content -->
-          <div *ngIf="activePlatform() !== 'hubspot' || activeTab === 'chatbots'">
+          <div *ngIf="(!activeSipChannel) && (activePlatform() !== 'hubspot' || activeTab === 'chatbots')">
             <!-- Agent configurations component -->
             <app-agent-select
               [agents]="currentSettings.agents"
