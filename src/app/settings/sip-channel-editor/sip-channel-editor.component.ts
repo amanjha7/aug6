@@ -54,10 +54,10 @@ export class SipChannelEditorComponent implements OnInit {
         registration: false,
         trunkStatus: 'disconnected',
         gatewayConfig: {
-          serverIp: 'sip.india.pronnel.com',
+          serverIp: 'sip.example.com',
           serverPort: '5060',
-          username: '9497035648_1204797517',
-          authUsername: '9497035648_1204797517',
+          username: 'mock_sip_user',
+          authUsername: 'mock_sip_user',
           authPassword: 'PLACEHOLDER_MOCK_PASSWORD'
         }
       };
@@ -71,10 +71,10 @@ export class SipChannelEditorComponent implements OnInit {
     if (!this.editChannel.region) this.editChannel.region = 'India';
     if (!this.editChannel.gatewayConfig) {
       this.editChannel.gatewayConfig = {
-        serverIp: 'sip.india.pronnel.com',
+        serverIp: 'sip.example.com',
         serverPort: '5060',
-        username: '9497035648_1204797517',
-        authUsername: '9497035648_1204797517',
+        username: 'mock_sip_user',
+        authUsername: 'mock_sip_user',
         authPassword: 'PLACEHOLDER_MOCK_PASSWORD'
       };
     }
@@ -87,7 +87,7 @@ export class SipChannelEditorComponent implements OnInit {
   public onTypeChange(): void {
     if (this.editChannel.incoming) {
       // Set values matching inbound.png
-      if (!this.editChannel.resource) this.editChannel.resource = 'C517India';
+      if (!this.editChannel.resource) this.editChannel.resource = 'mock_resource_id';
       if (!this.editChannel.mobileNumber) this.editChannel.mobileNumber = '1204797517';
       if (!this.editChannel.serverDomain) this.editChannel.serverDomain = '10.8.0.84';
       this.editChannel.protocol = 'TCP';
@@ -101,7 +101,7 @@ export class SipChannelEditorComponent implements OnInit {
   }
 
   public selectResource(): void {
-    this.editChannel.resource = 'C517India';
+    this.editChannel.resource = 'mock_resource_id';
   }
 
   public clearResource(): void {

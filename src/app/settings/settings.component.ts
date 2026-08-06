@@ -107,7 +107,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       outgoing: true,
       countryPrefix: '+91',
       mobileNumber: this.newChannelPhone || '1204797517',
-      resource: 'C517India',
+      resource: 'mock_resource_id',
       sipUsername: '',
       sipPassword: '',
       portNumber: '5060',
@@ -119,10 +119,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       registration: false,
       trunkStatus: 'disconnected',
       gatewayConfig: {
-        serverIp: 'sip.india.pronnel.com',
+        serverIp: 'sip.example.com',
         serverPort: '5060',
-        username: '9497035648_1204797517',
-        authUsername: '9497035648_1204797517',
+        username: 'mock_sip_user',
+        authUsername: 'mock_sip_user',
         authPassword: 'PLACEHOLDER_MOCK_PASSWORD'
       }
     };
