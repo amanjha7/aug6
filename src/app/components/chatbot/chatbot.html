@@ -1,1 +1,454 @@
-<p>chatbot works!</p>
+<!-- src/app/components/chatbot/chatbot.html -->
+<div class="chatbot">
+
+  <!-- ═════ TWO-PANE LAYOUT ═════ -->
+  <div class="pane-wrap">
+
+    <!-- ═════ LEFT: agents list ═════ -->
+    <aside class="list-pane" [class.list-pane--hidden]="selectedAgent">
+      <div class="list-pane__header">
+        <div class="list-pane__title-row">
+          <h3 class="list-pane__title">AI Agents</h3>
+          <span class="list-pane__count">{{ agents.length }}</span>
+        </div>
+        <button class="btn-primary btn-primary--sm" (click)="openCreateAgentForm()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New Agent
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrapper">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Search agents…" [value]="searchQuery" (input)="onSearchChange($any($event.target).value)"/>
+      </div>
+
+      <!-- Inline create form -->
+      <div *ngIf="showAgentForm && !selectedAgent" class="inline-form">
+        <form [formGroup]="agentForm" (ngSubmit)="createAgent()">
+          <label class="field-label">Agent Name</label>
+          <input class="input" formControlName="name" placeholder="e.g. Customer Support Bot" autofocus/>
+          <p *ngIf="hasError(agentForm, 'name', 'required')" class="form-error">Name is required</p>
+          <p *ngIf="hasError(agentForm, 'name', 'minlength')" class="form-error">At least 3 characters</p>
+
+          <div class="inline-form__actions">
+            <button type="button" class="btn-ghost btn-ghost--sm" (click)="cancelAgentForm()" [disabled]="agentSaving">Cancel</button>
+            <button type="submit" class="btn-primary btn-primary--sm" [disabled]="agentForm.invalid || agentSaving">
+              <span *ngIf="!agentSaving" class="btn-content">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Create
+              </span>
+              <span *ngIf="agentSaving" class="btn-content"><span class="spinner spinner--sm"></span>Saving…</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="list-empty">
+        <div class="spinner"></div>
+        <p class="list-empty__title">Loading agents…</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!isLoading && filteredAgents.length === 0" class="list-empty">
+        <div class="list-empty__icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/>
+          </svg>
+        </div>
+        <p class="list-empty__title">
+          {{ agents.length === 0 ? 'No AI agents yet' : 'No matches' }}
+        </p>
+        <p class="list-empty__desc">
+          {{ agents.length === 0 ? 'Create your first AI agent to get started.' : 'Try a different search term.' }}
+        </p>
+        <button *ngIf="agents.length === 0 && !showAgentForm" class="btn-primary btn-primary--sm mt-3" (click)="openCreateAgentForm()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Create Agent
+        </button>
+      </div>
+
+      <!-- Agents list -->
+      <div *ngIf="!isLoading && filteredAgents.length > 0" class="agent-list">
+        <div
+          *ngFor="let agent of filteredAgents; trackBy: trackAgent"
+          class="agent-card"
+          [class.agent-card--active]="selectedAgent?.ai_agent_id === agent.ai_agent_id"
+          (click)="openAgent(agent)">
+          <div class="agent-card__avatar" [style.background-color]="getAgentColor(agent) + '22'" [style.color]="getAgentColor(agent)">
+            {{ getAgentInitials(agent.name) }}
+          </div>
+          <div class="agent-card__info">
+            <p class="agent-card__name">{{ agent.name || 'Untitled Agent' }}</p>
+            <div class="agent-card__meta">
+              <span class="badge" [class.badge--green]="agent.is_publish" [class.badge--muted]="!agent.is_publish">
+                <span class="dot" [class.dot--active]="agent.is_publish"></span>
+                {{ agent.is_publish ? 'Published' : 'Draft' }}
+              </span>
+            </div>
+          </div>
+          <button class="icon-btn icon-btn--danger" title="Delete" (click)="requestDeleteAgent(agent, $event)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═════ RIGHT: agent detail ═════ -->
+    <section class="detail-pane" *ngIf="selectedAgent">
+      <!-- Back button (mobile) -->
+      <button class="back-btn" (click)="closeAgentDetail()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to agents
+      </button>
+
+      <!-- Agent header card -->
+      <div class="detail-card detail-card--hero">
+        <div class="detail-hero">
+          <div class="detail-hero__avatar" [style.background-color]="getAgentColor(selectedAgent) + '22'" [style.color]="getAgentColor(selectedAgent)">
+            {{ getAgentInitials(selectedAgent.name) }}
+          </div>
+          <div class="detail-hero__info">
+            <h2 class="detail-hero__name">{{ selectedAgent.name }}</h2>
+            <div class="detail-hero__meta">
+              <span class="badge" [class.badge--green]="selectedAgent.is_publish" [class.badge--muted]="!selectedAgent.is_publish">
+                <span class="dot" [class.dot--active]="selectedAgent.is_publish"></span>
+                {{ selectedAgent.is_publish ? 'Published' : 'Draft' }}
+              </span>
+              <span class="detail-hero__id">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9B9B9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+                </svg>
+                {{ selectedAgent.ai_agent_id }}
+              </span>
+            </div>
+          </div>
+          <button class="btn-ghost btn-ghost--bordered btn-ghost--sm" (click)="closeAgentDetail()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Close
+          </button>
+        </div>
+
+        <form [formGroup]="agentForm" (ngSubmit)="updateAgent()" class="edit-name-form">
+          <label class="field-label">Agent Name</label>
+          <div class="edit-name-row">
+            <input class="input" formControlName="name"/>
+            <button type="submit" class="btn-primary btn-primary--sm" [disabled]="agentForm.invalid || agentSaving">
+              <span *ngIf="!agentSaving">Save</span>
+              <span *ngIf="agentSaving" class="btn-content"><span class="spinner spinner--sm"></span>Saving…</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ═════ PROMPTS SECTION ═════ -->
+      <div class="detail-card">
+        <div class="section-head" (click)="showPrompts = !showPrompts">
+          <div class="section-head__title">
+            <div class="section-head__icon" style="background-color: rgba(184,169,232,0.15);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="section-head__label">Prompts</h4>
+              <p class="section-head__desc">Instruction sets for this agent</p>
+            </div>
+            <span class="section-head__count">{{ prompts.length }}</span>
+          </div>
+          <div class="section-head__actions">
+            <button class="btn-ghost btn-ghost--bordered btn-ghost--sm" (click)="$event.stopPropagation(); openPromptForm()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add
+            </button>
+            <svg class="chevron" [class.chevron--open]="showPrompts" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="section-body" *ngIf="showPrompts">
+          <!-- Prompt form -->
+          <div *ngIf="isPromptFormOpen" class="sub-form">
+            <div class="sub-form__header">
+              <h5>{{ editingPrompt ? 'Edit Prompt' : 'New Prompt' }}</h5>
+              <button class="icon-btn" (click)="closePromptForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <form [formGroup]="promptForm" (ngSubmit)="savePrompt()">
+              <div class="field">
+                <label class="field-label">Name <span class="req">*</span></label>
+                <input class="input" formControlName="name" placeholder="e.g. Greeting prompt"/>
+                <p *ngIf="hasError(promptForm, 'name', 'required')" class="form-error">Name is required</p>
+              </div>
+              <div class="field">
+                <label class="field-label">Instruction</label>
+                <textarea class="input textarea" formControlName="instruction" rows="4" placeholder="You are a helpful assistant that…"></textarea>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label class="field-label">First Message</label>
+                  <input class="input" formControlName="first_message" placeholder="Hi! How can I help?"/>
+                </div>
+                <div class="field">
+                  <label class="field-label">Assistant Name</label>
+                  <input class="input" formControlName="assistant_name" placeholder="Aria"/>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label">Voicemail Reply</label>
+                <input class="input" formControlName="voicemail_reply" placeholder="Sorry we missed you…"/>
+              </div>
+
+              <div class="sub-form__actions">
+                <button type="button" class="btn-ghost btn-ghost--sm" (click)="closePromptForm()" [disabled]="promptSaving">Cancel</button>
+                <button type="submit" class="btn-primary btn-primary--sm" [disabled]="promptForm.invalid || promptSaving">
+                  <span *ngIf="!promptSaving" class="btn-content">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    {{ editingPrompt ? 'Update Prompt' : 'Create Prompt' }}
+                  </span>
+                  <span *ngIf="promptSaving" class="btn-content"><span class="spinner spinner--sm"></span>Saving…</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Prompt list -->
+          <div class="sub-list" *ngIf="prompts.length > 0">
+            <div class="sub-item" *ngFor="let p of prompts; trackBy: trackPrompt">
+              <div class="sub-item__icon" style="background-color: rgba(184,169,232,0.15);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <div class="sub-item__info">
+                <p class="sub-item__title">{{ p.name || 'Untitled prompt' }}</p>
+                <p class="sub-item__desc">{{ (p.instruction || '—') | slice:0:80 }}{{ p.instruction?.length > 80 ? '…' : '' }}</p>
+              </div>
+              <div class="sub-item__actions">
+                <button class="icon-btn" title="Edit" (click)="openPromptForm(p)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="icon-btn icon-btn--danger" title="Delete" (click)="requestDeletePrompt(p)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="prompts.length === 0 && !isPromptFormOpen" class="sub-empty">
+            No prompts yet. Click <strong>+ Add</strong> to create one.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════ FUNCTIONS SECTION ═════ -->
+      <div class="detail-card">
+        <div class="section-head" (click)="showFunctions = !showFunctions">
+          <div class="section-head__title">
+            <div class="section-head__icon" style="background-color: rgba(78,205,196,0.15);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="section-head__label">Functions</h4>
+              <p class="section-head__desc">Tools the agent can call at runtime</p>
+            </div>
+            <span class="section-head__count">{{ functions.length }}</span>
+          </div>
+          <div class="section-head__actions">
+            <button class="btn-ghost btn-ghost--bordered btn-ghost--sm" (click)="$event.stopPropagation(); openFunctionForm()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add
+            </button>
+            <svg class="chevron" [class.chevron--open]="showFunctions" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="section-body" *ngIf="showFunctions">
+          <!-- Function form -->
+          <div *ngIf="isFunctionFormOpen" class="sub-form">
+            <div class="sub-form__header">
+              <h5>{{ editingFunction ? 'Edit Function' : 'New Function' }}</h5>
+              <button class="icon-btn" (click)="closeFunctionForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <form [formGroup]="functionForm" (ngSubmit)="saveFunction()">
+              <div class="field">
+                <label class="field-label">Name <span class="req">*</span></label>
+                <input class="input" formControlName="name" placeholder="e.g. get_weather"/>
+                <p *ngIf="hasError(functionForm, 'name', 'required')" class="form-error">Name is required</p>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Function Type</label>
+                <div class="type-picker type-picker--fn">
+                  <button
+                    *ngFor="let t of functionTypes"
+                    type="button"
+                    class="type-picker__card"
+                    [class.type-picker__card--active]="functionForm.value.function_type === t.value"
+                    (click)="functionForm.patchValue({ function_type: t.value })">
+                    <div class="type-picker__dot" [style.background-color]="t.color"></div>
+                    <div class="type-picker__body">
+                      <p class="type-picker__label">{{ t.label }}</p>
+                      <p class="type-picker__desc">{{ t.description }}</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div class="field" *ngIf="functionForm.value.function_type === 'CUSTOM'">
+                <label class="field-label">Description</label>
+                <textarea class="input textarea" formControlName="description" rows="2" placeholder="What does this function do?"></textarea>
+              </div>
+
+              <div class="field" *ngIf="functionForm.value.function_type === 'CUSTOM'">
+                <label class="field-label">Parameters (JSON)</label>
+                <textarea class="input textarea input--mono" formControlName="parameters" rows="6" placeholder='{ "type": "object", "properties": {} }'></textarea>
+              </div>
+
+              <div class="sub-form__actions">
+                <button type="button" class="btn-ghost btn-ghost--sm" (click)="closeFunctionForm()" [disabled]="functionSaving">Cancel</button>
+                <button type="submit" class="btn-primary btn-primary--sm" [disabled]="functionForm.invalid || functionSaving">
+                  <span *ngIf="!functionSaving" class="btn-content">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    {{ editingFunction ? 'Update Function' : 'Create Function' }}
+                  </span>
+                  <span *ngIf="functionSaving" class="btn-content"><span class="spinner spinner--sm"></span>Saving…</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Functions list -->
+          <div class="sub-list" *ngIf="functions.length > 0">
+            <div class="sub-item" *ngFor="let f of functions; trackBy: trackFunc">
+              <div class="sub-item__icon" [style.background-color]="getFunctionMeta(f.function_type).color + '22'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getFunctionMeta(f.function_type).color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+                </svg>
+              </div>
+              <div class="sub-item__info">
+                <p class="sub-item__title">{{ f.name }}</p>
+                <div class="sub-item__meta">
+                  <span class="pill"
+                    [style.background-color]="getFunctionMeta(f.function_type).color + '1A'"
+                    [style.color]="getFunctionMeta(f.function_type).textColor"
+                    [style.border-color]="getFunctionMeta(f.function_type).color + '33'">
+                    {{ getFunctionMeta(f.function_type).label }}
+                  </span>
+                  <span *ngIf="f.function_def?.description" class="sub-item__hint">{{ f.function_def?.description | slice:0:60 }}{{ f.function_def?.description?.length > 60 ? '…' : '' }}</span>
+                </div>
+              </div>
+              <div class="sub-item__actions">
+                <button class="icon-btn" title="Edit" (click)="openFunctionForm(f)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="icon-btn icon-btn--danger" title="Delete" (click)="requestDeleteFunction(f)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="functions.length === 0 && !isFunctionFormOpen" class="sub-empty">
+            No functions yet. Click <strong>+ Add</strong> to create one.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Empty state (no agent selected on desktop) -->
+    <section class="detail-pane detail-pane--placeholder" *ngIf="!selectedAgent">
+      <div class="placeholder">
+        <div class="placeholder__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/>
+          </svg>
+        </div>
+        <h3>Select an agent</h3>
+        <p>Choose an AI agent from the left to view and edit its prompts and functions.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═════ DELETE CONFIRM ═════ -->
+  <div class="modal-overlay" *ngIf="confirmDelete" (click)="cancelDelete()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="confirm-body">
+        <div class="confirm-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+        <h3 class="confirm-title">Delete this {{ confirmDelete?.kind }}?</h3>
+        <p class="confirm-desc">
+          <strong>{{ confirmDelete?.name || 'This item' }}</strong> will be removed permanently. This action cannot be undone.
+        </p>
+        <div class="confirm-actions">
+          <button class="btn-ghost btn-ghost--bordered" (click)="cancelDelete()">Cancel</button>
+          <button class="btn-danger" (click)="performDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════ TOAST ═════ -->
+  <div class="toast" *ngIf="toast" [class.toast--success]="toast.type === 'success'" [class.toast--error]="toast.type === 'error'">
+    <svg *ngIf="toast.type === 'success'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <svg *ngIf="toast.type === 'error'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>
+    {{ toast.msg }}
+  </div>
+</div>
