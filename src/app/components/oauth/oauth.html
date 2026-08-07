@@ -1,0 +1,99 @@
+<div class="oauth-wrapper">
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="oauth-card">
+    <div class="loading-pulse">
+      <div class="pulse-dot"></div>
+    </div>
+    <p class="oauth-status-text">Checking connection status...</p>
+  </div>
+
+  <!-- Connected State -->
+  <div *ngIf="!loading() && status() === 'connected'" class="oauth-card connected-card">
+    <div class="success-icon">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="24" fill="#E6F4EA"/>
+        <path d="M14 24L21 31L34 17" stroke="#1E8E3E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2 class="oauth-title success-title">Connected!</h2>
+    <p class="oauth-subtitle">Your HubSpot account is successfully linked.</p>
+    <div class="connected-badge">
+      <span class="badge-dot"></span>
+      Active Connection
+    </div>
+  </div>
+
+  <!-- Not Connected States -->
+  <div *ngIf="!loading() && status() !== 'connected'" class="oauth-card">
+    <div class="hubspot-logo">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <rect width="56" height="56" rx="12" fill="#FF7A59"/>
+        <path d="M38.5 19.6v16.8c0 1.16-.94 2.1-2.1 2.1h-5.04a6.72 6.72 0 0 1-2.4-12.97V19.6c0-1.16.94-2.1 2.1-2.1h5.34c1.16 0 2.1.94 2.1 2.1Z" fill="white" opacity=".85"/>
+        <path d="M31.36 38.5H19.6c-1.16 0-2.1-.94-2.1-2.1v-5.04a6.72 6.72 0 0 1 12.97-2.4h5.93c1.16 0 2.1.94 2.1 2.1v5.34c0 1.16-.94 2.1-2.1 2.1Z" fill="white" opacity=".65"/>
+      </svg>
+    </div>
+
+    <h2 class="oauth-title">Connect HubSpot</h2>
+    <p class="oauth-subtitle">
+      Link your HubSpot account to unlock powerful integrations and automate your workflow.
+    </p>
+
+    <!-- Idle State -->
+    <div *ngIf="status() === 'idle'" class="oauth-actions">
+      <a
+        [href]="oauthInitUrl"
+        target="_blank"
+        class="connect-button"
+        (click)="onConnectClick()"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2v16M2 10h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        Connect HubSpot Account
+      </a>
+      <p class="hint-text">You'll be redirected to HubSpot for authorization</p>
+    </div>
+
+    <!-- Pending State -->
+    <div *ngIf="status() === 'pending'" class="oauth-actions">
+      <div class="pending-notice">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="9" stroke="#E37400" stroke-width="2"/>
+          <path d="M10 5v5l3 3" stroke="#E37400" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>Waiting for authorization...</span>
+      </div>
+      <button class="verify-button" (click)="validate()" [disabled]="loading()">
+        <svg *ngIf="!loading()" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3 9l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span *ngIf="loading()" class="btn-spinner"></span>
+        {{ loading() ? 'Verifying...' : "I've Connected — Verify Now" }}
+      </button>
+      <p class="hint-text">Complete the authorization in the opened window, then click verify</p>
+    </div>
+
+    <!-- Failed State -->
+    <div *ngIf="status() === 'failed'" class="oauth-actions">
+      <div class="error-notice">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="9" stroke="#D93025" stroke-width="2"/>
+          <path d="M7 7l6 6M13 7l-6 6" stroke="#D93025" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>Connection failed. Please try again.</span>
+      </div>
+      <a
+        [href]="oauthInitUrl"
+        target="_blank"
+        class="connect-button retry-button"
+        (click)="onConnectClick()"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M17 10a7 7 0 1 1-1.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M17 3v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Try Again
+      </a>
+    </div>
+  </div>
+</div>

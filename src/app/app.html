@@ -1,1 +1,8 @@
-<app-settings></app-settings>
+<!-- Always show OAuth component -->
+ @if (!isAuthChecked() || !isConnected()) {
+  <app-oauth (connected)="onConnectionChange($event)"></app-oauth>
+}
+<!-- Show Settings only after auth check is done AND connection is successful -->
+@if (isAuthChecked() && isConnected()) {
+  <app-settings></app-settings>
+}

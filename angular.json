@@ -57,6 +57,12 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "allowedHosts": [
+              "developerapi80.pronnel.com"
+            ]
+          },
           "configurations": {
             "production": {
               "buildTarget": "generic-settings-page-aicallapp:build:production"
