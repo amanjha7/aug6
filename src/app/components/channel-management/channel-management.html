@@ -1,0 +1,615 @@
+<!-- src/app/components/channel-management/channel-management.html -->
+<div class="channel-management">
+
+  <!-- ═══════════════════ HEADER ═══════════════════ -->
+  <div class="app-header">
+    <div class="app-header__inner">
+      <div class="app-header__left">
+        <div class="brand-square">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="app-title">Channel Management</h1>
+          <p class="app-subtitle">
+            {{ totalCount }} channel{{ totalCount !== 1 ? 's' : '' }} configured · Twilio · SIP · Hardware Gateway
+          </p>
+        </div>
+      </div>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Channel
+      </button>
+    </div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- ═══════════════════ STAT CARDS ═══════════════════ -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card__row">
+          <div class="stat-icon" style="background-color: rgba(184,169,232,0.15);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/>
+            </svg>
+          </div>
+          <span class="stat-value">{{ totalCount }}</span>
+        </div>
+        <p class="stat-label">Total channels</p>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__row">
+          <div class="stat-icon" style="background-color: rgba(74,222,128,0.15);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <span class="stat-value">{{ activeCount }}</span>
+        </div>
+        <p class="stat-label">Active</p>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__row">
+          <div class="stat-icon" style="background-color: rgba(255,107,107,0.15);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="12.41 6.75 13 2 10.57 4.92"/><polyline points="18.57 12.91 21 10 15.66 10"/>
+              <polyline points="8 8 3 14 12 14 11 22 16 16"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </div>
+          <span class="stat-value">{{ inactiveCount }}</span>
+        </div>
+        <p class="stat-label">Inactive</p>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__row">
+          <div class="stat-icon" style="background-color: rgba(245,166,35,0.15);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <span class="stat-value">{{ regionCount }}</span>
+        </div>
+        <p class="stat-label">Regions in use</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ TYPE BREAKDOWN ═══════════════════ -->
+    <div class="type-grid">
+      <button
+        *ngFor="let t of channelTypes"
+        class="type-card"
+        [class.type-card--active]="typeFilter === t.value"
+        (click)="setTypeFilter(t.value)">
+        <div class="type-card__row">
+          <div class="type-card__icon" [style.background-color]="t.color + '22'">
+            <svg *ngIf="t.icon === 'phone'" width="16" height="16" viewBox="0 0 24 24" fill="none" [attr.stroke]="t.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <svg *ngIf="t.icon === 'radio'" width="16" height="16" viewBox="0 0 24 24" fill="none" [attr.stroke]="t.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="2"/>
+              <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+            </svg>
+            <svg *ngIf="t.icon === 'server'" width="16" height="16" viewBox="0 0 24 24" fill="none" [attr.stroke]="t.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+          </div>
+          <span class="type-card__count">{{ getTypeCount(t.value) }}</span>
+        </div>
+        <p class="type-card__label">{{ t.label }}</p>
+        <p class="type-card__desc">{{ t.description }}</p>
+      </button>
+    </div>
+
+    <!-- ═══════════════════ FILTERS ═══════════════════ -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search channels…"
+          [value]="searchQuery"
+          (input)="onSearchChange($any($event.target).value)"/>
+      </div>
+
+      <div class="segmented">
+        <button class="segmented__btn" [class.segmented__btn--active]="statusFilter === 'all'" (click)="setStatusFilter('all')">All</button>
+        <button class="segmented__btn" [class.segmented__btn--active]="statusFilter === 'active'" (click)="setStatusFilter('active')">Active</button>
+        <button class="segmented__btn" [class.segmented__btn--active]="statusFilter === 'inactive'" (click)="setStatusFilter('inactive')">Inactive</button>
+      </div>
+
+      <button *ngIf="typeFilter !== 'all'" class="chip-filter" (click)="clearTypeFilter()">
+        Type: {{ getTypeMeta(typeFilter).label }}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <span class="result-count">{{ filteredChannels.length }} result{{ filteredChannels.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- ═══════════════════ CHANNEL LIST ═══════════════════ -->
+    <div class="list-card">
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="list-empty">
+        <div class="spinner"></div>
+        <p class="list-empty__title">Loading channels…</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!isLoading && filteredChannels.length === 0" class="list-empty">
+        <div class="list-empty__icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/>
+          </svg>
+        </div>
+        <p class="list-empty__title">No channels found</p>
+        <p class="list-empty__desc">
+          {{ channels.length === 0 ? 'Get started by adding your first channel.' : 'Try adjusting search or filters.' }}
+        </p>
+        <button *ngIf="channels.length === 0" class="btn-primary btn-primary--sm" (click)="openCreateModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add first channel
+        </button>
+      </div>
+
+      <!-- Rows -->
+      <div *ngIf="!isLoading && filteredChannels.length > 0" class="list">
+        <div
+          *ngFor="let ch of filteredChannels; trackBy: trackById"
+          class="row"
+          (click)="openEditModal(ch)">
+
+          <!-- Type icon -->
+          <div class="row__icon" [style.background-color]="getTypeMeta(getChannelType(ch)).color + '22'">
+            <svg *ngIf="getTypeMeta(getChannelType(ch)).icon === 'phone'" width="16" height="16" viewBox="0 0 24 24" fill="none" [attr.stroke]="getTypeMeta(getChannelType(ch)).color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <svg *ngIf="getTypeMeta(getChannelType(ch)).icon === 'radio'" width="16" height="16" viewBox="0 0 24 24" fill="none" [attr.stroke]="getTypeMeta(getChannelType(ch)).color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+            </svg>
+            <svg *ngIf="getTypeMeta(getChannelType(ch)).icon === 'server'" width="16" height="16" viewBox="0 0 24 24" fill="none" [attr.stroke]="getTypeMeta(getChannelType(ch)).color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+          </div>
+
+          <!-- Info -->
+          <div class="row__info">
+            <div class="row__title">
+              <span>{{ ch.name || 'Untitled channel' }}</span>
+              <span class="dot" [class.dot--active]="ch.is_enabled"></span>
+            </div>
+            <div class="row__meta">
+              <span class="pill"
+                [style.background-color]="getTypeMeta(getChannelType(ch)).color + '1A'"
+                [style.color]="getTypeMeta(getChannelType(ch)).textColor"
+                [style.border-color]="getTypeMeta(getChannelType(ch)).color + '33'">
+                {{ getTypeMeta(getChannelType(ch)).label }}
+              </span>
+              <span *ngIf="ch.sip_settings?.domain || ch.region" class="meta-chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ ch.sip_settings?.domain || ch.region }}
+              </span>
+              <span *ngIf="getChannelType(ch) === 'TWILIO' && ch.mobile_number?.mobile_number" class="meta-chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                {{ ch.mobile_number.country_code }} {{ ch.mobile_number.mobile_number }}
+              </span>
+              <span *ngIf="getChannelType(ch) === 'SIP' && ch.sip_settings?.server_uri" class="meta-chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                </svg>
+                {{ ch.sip_settings.server_uri }}:{{ ch.sip_settings.port }}
+              </span>
+              <span *ngIf="getChannelType(ch) === 'SIP_GATEWAY_HARDWARE' && ch.sip_settings?.server_ip" class="meta-chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                </svg>
+                {{ ch.sip_settings.server_ip }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Direction badges -->
+          <div class="row__badges">
+            <span class="badge" [class.badge--on]="ch.call_type?.includes('INCOMING')" [class.badge--in]="ch.call_type?.includes('INCOMING')">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 2 16 8 22 8"/><line x1="22" y1="2" x2="16" y2="8"/>
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              In
+            </span>
+            <span class="badge" [class.badge--on]="ch.call_type?.includes('OUTGOING')" [class.badge--out]="ch.call_type?.includes('OUTGOING')">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 7 23 1 17 1"/><line x1="17" y1="7" x2="23" y2="1"/>
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              Out
+            </span>
+          </div>
+
+          <!-- Delete -->
+          <div class="row__actions">
+            <button class="icon-btn icon-btn--danger" title="Delete" (click)="requestDelete(ch, $event)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CREATE / EDIT MODAL ═══════════════════ -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <!-- Modal header -->
+      <div class="modal__header">
+        <div class="modal__title-row">
+          <div class="modal__icon">
+            <svg *ngIf="!isEditMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <svg *ngIf="isEditMode" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal__title">{{ isEditMode ? 'Edit Channel' : 'Create Channel' }}</h2>
+            <p class="modal__subtitle">Configure telephony provider and call routing</p>
+          </div>
+        </div>
+        <button class="icon-btn" (click)="closeModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal__body">
+        <form [formGroup]="channelForm" (ngSubmit)="onSubmit()">
+
+          <!-- Channel type picker -->
+          <div class="form-block">
+            <label class="form-block__label">Channel Type</label>
+            <div class="type-picker">
+              <button
+                *ngFor="let t of channelTypes"
+                type="button"
+                class="type-picker__card"
+                [class.type-picker__card--active]="selectedType === t.value"
+                [class.type-picker__card--disabled]="isEditMode"
+                [disabled]="isEditMode"
+                (click)="selectChannelType(t.value)">
+                <div class="type-picker__icon" [style.background-color]="t.color + '22'">
+                  <svg *ngIf="t.icon === 'phone'" width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="t.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <svg *ngIf="t.icon === 'radio'" width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="t.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+                  </svg>
+                  <svg *ngIf="t.icon === 'server'" width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="t.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                  </svg>
+                </div>
+                <p class="type-picker__label">{{ t.label }}</p>
+                <p class="type-picker__desc">{{ t.description }}</p>
+                <div *ngIf="selectedType === t.value" class="type-picker__selected">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Selected
+                </div>
+              </button>
+            </div>
+            <p *ngIf="hasAnyError('type')" class="form-error">Please select a channel type</p>
+          </div>
+
+          <!-- Channel name -->
+          <div class="form-block">
+            <label class="form-block__label form-block__label--with-icon">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+              </svg>
+              Channel Name <span class="req">*</span>
+            </label>
+            <input class="input" formControlName="name" placeholder="e.g. My Twilio Channel"/>
+            <p *ngIf="hasError('name', 'required')" class="form-error">Channel name is required</p>
+            <p *ngIf="hasError('name', 'minlength')" class="form-error">Name must be at least 3 characters</p>
+          </div>
+
+          <!-- Call direction -->
+          <div class="form-block">
+            <label class="form-block__label">Call Direction</label>
+            <div class="direction-grid">
+              <button
+                type="button"
+                class="direction"
+                [class.direction--active]="channelForm.value.incoming"
+                (click)="toggleDirection('incoming')">
+                <div class="direction__icon" style="background-color: rgba(74,222,128,0.15);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 2 16 8 22 8"/><line x1="22" y1="2" x2="16" y2="8"/>
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </div>
+                <div class="direction__text">
+                  <p class="direction__label">Incoming Calls</p>
+                  <p class="direction__desc">Receive calls on this channel</p>
+                </div>
+                <span class="direction__check" [class.direction__check--on]="channelForm.value.incoming">
+                  <svg *ngIf="channelForm.value.incoming" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                class="direction"
+                [class.direction--active]="channelForm.value.outgoing"
+                (click)="toggleDirection('outgoing')">
+                <div class="direction__icon" style="background-color: rgba(78,205,196,0.15);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 7 23 1 17 1"/><line x1="17" y1="7" x2="23" y2="1"/>
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </div>
+                <div class="direction__text">
+                  <p class="direction__label">Outgoing Calls</p>
+                  <p class="direction__desc">Place calls from this channel</p>
+                </div>
+                <span class="direction__check" [class.direction__check--on]="channelForm.value.outgoing">
+                  <svg *ngIf="channelForm.value.outgoing" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ═══════════ TYPE-SPECIFIC FIELDS ═══════════ -->
+
+          <!-- TWILIO -->
+          <div class="type-section type-section--coral" *ngIf="selectedType === 'TWILIO'">
+            <h4 class="section-heading" style="color:#1A1A1A;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              Twilio Credentials
+            </h4>
+
+            <div class="form-block">
+              <label class="form-block__label form-block__label--with-icon">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                </svg>
+                Account SID <span class="req">*</span>
+              </label>
+              <input class="input input--mono" formControlName="accountSID" placeholder="AC..."/>
+            </div>
+
+            <div class="form-block">
+              <label class="form-block__label form-block__label--with-icon">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Auth Token <span class="req">*</span>
+              </label>
+              <div class="input-wrapper">
+                <input class="input input--mono" [type]="showAuthToken ? 'text' : 'password'" formControlName="authToken" placeholder="Auth token"/>
+                <button type="button" class="input-toggle" (click)="showAuthToken = !showAuthToken">
+                  <svg *ngIf="!showAuthToken" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg *ngIf="showAuthToken" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-block">
+              <label class="form-block__label form-block__label--with-icon">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                Mobile Number <span class="req">*</span>
+              </label>
+              <div class="mobile-row">
+                <select class="input input--code" formControlName="mobileCountryCode">
+                  <option value="">Code</option>
+                  <option *ngFor="let c of countryCodes" [value]="c.dial_code">{{ c.dial_code }} ({{ c.name }})</option>
+                </select>
+                <input class="input" formControlName="mobileNumber" placeholder="4155551234" (input)="onMobileNumberInput($event)"/>
+              </div>
+              <p *ngIf="hasError('mobileNumber', 'pattern')" class="form-error">Numbers only</p>
+            </div>
+          </div>
+
+          <!-- SIP -->
+          <div class="type-section type-section--teal" *ngIf="selectedType === 'SIP'">
+            <h4 class="section-heading">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+              </svg>
+              SIP Outbound Settings
+            </h4>
+
+            <div class="grid-2">
+              <div class="form-block">
+                <label class="form-block__label">Username <span class="req">*</span></label>
+                <input class="input" formControlName="username" placeholder="SIP username"/>
+              </div>
+
+              <div class="form-block">
+                <label class="form-block__label">Password <span class="req">*</span></label>
+                <div class="input-wrapper">
+                  <input class="input" [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="SIP password"/>
+                  <button type="button" class="input-toggle" (click)="showPassword = !showPassword">
+                    <svg *ngIf="!showPassword" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg *ngIf="showPassword" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <div class="form-block">
+                <label class="form-block__label">Server URI <span class="req">*</span></label>
+                <input class="input" formControlName="server_uri" placeholder="sip.example.com"/>
+              </div>
+              <div class="form-block">
+                <label class="form-block__label">Port <span class="req">*</span></label>
+                <input class="input" formControlName="port" placeholder="5060"/>
+              </div>
+              <div class="form-block">
+                <label class="form-block__label">Protocol</label>
+                <select class="input" formControlName="protocol">
+                  <option value="UDP">UDP</option>
+                  <option value="TCP">TCP</option>
+                  <option value="TLS">TLS</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-block">
+              <label class="form-block__label">Media Encryption</label>
+              <select class="input" formControlName="mediaencryption">
+                <option value="none">None</option>
+                <option value="sdes">SDES</option>
+              </select>
+            </div>
+
+            <label class="toggle-card">
+              <input type="checkbox" formControlName="registrationEnabled"/>
+              <div class="toggle-card__text">
+                <p class="toggle-card__label">Enable Registration</p>
+                <p class="toggle-card__desc">Register this SIP endpoint with the server</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- SIP GATEWAY -->
+          <div class="type-section type-section--amber" *ngIf="selectedType === 'SIP_GATEWAY_HARDWARE'">
+            <h4 class="section-heading">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              </svg>
+              SIP Gateway Settings
+            </h4>
+
+            <div class="grid-2">
+              <div class="form-block">
+                <label class="form-block__label">Server IP <span class="req">*</span></label>
+                <input class="input input--mono" formControlName="server_ip" placeholder="192.168.1.1"/>
+                <p *ngIf="hasError('server_ip', 'pattern')" class="form-error">Enter a valid IPv4 address</p>
+              </div>
+              <div class="form-block">
+                <label class="form-block__label">Protocol</label>
+                <select class="input" formControlName="protocol">
+                  <option value="UDP">UDP</option>
+                  <option value="TCP">TCP</option>
+                  <option value="TLS">TLS</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Region -->
+          <div class="form-block" *ngIf="['TWILIO', 'SIP', 'SIP_GATEWAY_HARDWARE'].includes(selectedType)">
+            <label class="form-block__label form-block__label--with-icon">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              Region
+            </label>
+            <select class="input" formControlName="region">
+              <option value="">Select region</option>
+              <option *ngFor="let r of regions" [value]="r.domain">{{ r.region }}</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal footer -->
+      <div class="modal__footer">
+        <p class="modal__footer-hint">{{ isEditMode ? 'Updating existing channel' : 'A new channel will be created' }}</p>
+        <div class="modal__footer-actions">
+          <button type="button" class="btn-ghost" (click)="closeModal()" [disabled]="saving">Cancel</button>
+          <button type="button" class="btn-primary btn-primary--sm" (click)="onSubmit()" [disabled]="channelForm.invalid || saving">
+            <span *ngIf="!saving" class="btn-content">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              {{ isEditMode ? 'Update Channel' : 'Create Channel' }}
+            </span>
+            <span *ngIf="saving" class="btn-content">
+              <span class="spinner spinner--sm"></span> Saving…
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ DELETE CONFIRM ═══════════════════ -->
+  <div class="modal-overlay" *ngIf="confirmDelete" (click)="cancelDelete()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="confirm-body">
+        <div class="confirm-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+        <h3 class="confirm-title">Delete this channel?</h3>
+        <p class="confirm-desc">
+          <strong>{{ confirmDelete?.name || 'This channel' }}</strong> will be removed permanently. This action cannot be undone.
+        </p>
+        <div class="confirm-actions">
+          <button class="btn-ghost btn-ghost--bordered" (click)="cancelDelete()">Cancel</button>
+          <button class="btn-danger" (click)="performDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ TOAST ═══════════════════ -->
+  <div class="toast" *ngIf="toast" [class.toast--success]="toast.type === 'success'" [class.toast--error]="toast.type === 'error'">
+    <svg *ngIf="toast.type === 'success'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <svg *ngIf="toast.type === 'error'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>
+    {{ toast.msg }}
+  </div>
+</div>
