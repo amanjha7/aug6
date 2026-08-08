@@ -1,5 +1,5 @@
 // src/app/components/channel-management/channel-management.ts
-import { Component, Input, OnInit, HostListener } from '@angular/core';
+import { Component, Input, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ChannelService } from '../../services/channel.service';
@@ -183,7 +183,7 @@ export class ChannelManagement implements OnInit {
   get forwardToNumbers(): FormArray { return this.forwardToNumbersForm?.get('forwardToNumbers') as FormArray; }
   get ipMatchList(): FormArray { return this.channelForm?.get('additionalSettings.ipMatchList') as FormArray; }
 
-  constructor(private fb: FormBuilder, private channelService: ChannelService) {}
+  constructor(private fb: FormBuilder, private channelService: ChannelService, private cdr: ChangeDetectorRef) {}
 
   // ═══════════════════ INIT ═══════════════════
   ngOnInit(): void {
@@ -296,12 +296,14 @@ export class ChannelManagement implements OnInit {
   removeIpMatch(i: number): void { this.ipMatchList.removeAt(i); }
 
   patchForm(channel: any): void {
-    const chType = channel.type || channel.channel_type || '';
+    const chType = channel.channel_type || channel.type || '';
+    // Normalize: if type is an array, use channel_type
+    const typeStr = this.channelTypes.find(t => t.value === chType) ? chType : '';
     const fv: any = {
       name: channel.name || '',
-      type: chType,
-      incoming: channel.type?.includes('INCOMING') || channel.call_type?.includes('INCOMING') || false,
-      outgoing: channel.type?.includes('OUTGOING') || channel.call_type?.includes('OUTGOING') || false,
+      type: typeStr || chType,
+      incoming: Array.isArray(channel.type) ? channel.type.includes('INCOMING') : (channel.call_type?.includes('INCOMING') || false),
+      outgoing: Array.isArray(channel.type) ? channel.type.includes('OUTGOING') : (channel.call_type?.includes('OUTGOING') || false),
     };
 
     // Mobile number — ALL channel types can have it
@@ -393,10 +395,12 @@ export class ChannelManagement implements OnInit {
         this.channels = Array.isArray(res) ? res : (res?.result?.channels || res?.result || []);
         this.applyFilters();
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.showToast('error', 'Failed to load channels');
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -432,7 +436,7 @@ export class ChannelManagement implements OnInit {
   loadResources(): void {
     this.loadingResources = true;
     this.channelService.getResources(this.dashId).subscribe({
-      next: (res: any) => { this.resourcesList = Array.isArray(res) ? res : (res?.result || []); this.loadingResources = false; },
+      next: (res: any) => { this.resourcesList = Array.isArray(res) ? res : (res?.result || []); this.loadingResources = false; this.cdr.detectChanges();},
       error: () => { this.loadingResources = false; },
     });
   }
@@ -450,8 +454,9 @@ export class ChannelManagement implements OnInit {
   applyFilters(): void {
     const q = this.searchQuery.trim().toLowerCase();
     this.filteredChannels = this.channels.filter(ch => {
-      const chType = ch.type || ch.channel_type || '';
-      if (q && !(ch.name || '').toLowerCase().includes(q) && !chType.toLowerCase().includes(q)) return false;
+      const chType = this.getChannelType(ch);
+      const chName = (ch.name || '').toLowerCase();
+      if (q && !chName.includes(q) && !chType.toLowerCase().includes(q)) return false;
       if (this.typeFilter !== 'all' && chType !== this.typeFilter) return false;
       if (this.statusFilter === 'active' && !ch.is_enabled) return false;
       if (this.statusFilter === 'inactive' && ch.is_enabled) return false;
@@ -463,7 +468,7 @@ export class ChannelManagement implements OnInit {
   setTypeFilter(v: string): void { this.typeFilter = this.typeFilter === v ? 'all' : v; this.applyFilters(); }
   setStatusFilter(v: 'all' | 'active' | 'inactive'): void { this.statusFilter = v; this.applyFilters(); }
   clearTypeFilter(): void { this.typeFilter = 'all'; this.applyFilters(); }
-  getTypeCount(type: string): number { return this.channels.filter(c => (c.type || c.channel_type) === type).length; }
+  getTypeCount(type: string): number { return this.channels.filter(c => this.getChannelType(c) === type).length; }
 
   // ═══════════════════ RESOURCE ═══════════════════
   selectResource(res: Resource): void {
@@ -517,9 +522,10 @@ export class ChannelManagement implements OnInit {
     this.conversationCloseExpanded = false;
     this.incomingCallExpanded = false;
     this.showModal = true;
+    this.loadResources(); 
   }
 
-  openEditModal(channel: any): void { this.initForm(channel); this.showModal = true; }
+  openEditModal(channel: any): void { this.initForm(channel); this.showModal = true; this.loadResources(); }
 
   closeModal(): void {
     if (this.saving) return;
@@ -549,8 +555,7 @@ export class ChannelManagement implements OnInit {
 
   updateTimeSetting(event: any): void {
     this.timeSettingsObj = event;
-    this.channelForm?.patchValue({ timeSettingsEnabled: event?.is_enabled || false });
-    this.closePanel();
+    this.channelForm?.patchValue({ timeSettingsEnabled: event?.is_enabled || false }, { emitEvent: false });
   }
 
   // ═══════════════════ SUBMIT ═══════════════════
@@ -601,6 +606,9 @@ export class ChannelManagement implements OnInit {
     };
     if (form.incoming) payload.type.push('INCOMING');
     if (form.outgoing) payload.type.push('OUTGOING');
+
+    // Remove type if empty (backend may reject empty array)
+    if (payload.type.length === 0) delete payload.type;
 
     // AI Agent / Call Flow routing
     if (!this.isSipOrGateway()) {
@@ -685,7 +693,7 @@ export class ChannelManagement implements OnInit {
     };
   }
 
-  getChannelType(ch: any): string { return ch.type || ch.channel_type || ''; }
+  getChannelType(ch: any): string { return ch.channel_type || (Array.isArray(ch.type) ? '' : ch.type) || ''; }
 
   hasError(field: string, err: string): boolean {
     const c = this.channelForm.get(field);
