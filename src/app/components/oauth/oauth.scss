@@ -1,326 +1,284 @@
-// Variables
+// src/app/components/oauth/oauth.scss
 $primary: #FF7A59;
 $primary-hover: #FF8F73;
 $primary-light: #FFF3EF;
-$success: #1E8E3E;
+$success: #166534;
 $success-light: #E6F4EA;
-$error: #D93025;
-$error-light: #FCE8E6;
-$warning: #E37400;
-$warning-light: #FEF7E0;
+$error: #DC2626;
+$error-light: #FEE2E2;
+$warning: #D97706;
+$warning-light: #FEF3C7;
 $text-primary: #1E1E1E;
-$text-secondary: #5F6368;
-$text-muted: #80868B;
+$text-secondary: #4B5563;
+$text-muted: #9CA3AF;
 $card-bg: #FFFFFF;
-$bg: #F6F8FA;
-$border: #E1E4E8;
-$radius: 16px;
-$radius-sm: 10px;
-$shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
-$shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.1);
-$font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$bg: #FAFAF8;
+$border: #F0F0F0;
+$radius: 20px;
+$radius-sm: 12px;
 
-// Reset & Base
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-// Wrapper
 .oauth-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 24px;
+  padding: 32px 24px;
   background: $bg;
-  font-family: $font;
-  -webkit-font-smoothing: antialiased;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: $text-primary;
+  * { box-sizing: border-box; }
 }
 
-// Card
 .oauth-card {
   background: $card-bg;
   border-radius: $radius;
-  box-shadow: $shadow;
-  padding: 48px 40px;
-  max-width: 440px;
+  border: 1px solid $border;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.03);
+  padding: 44px 36px;
+  max-width: 480px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0;
-  transition: box-shadow 0.3s ease;
-
-  &:hover {
-    box-shadow: $shadow-hover;
-  }
+  transition: all 0.25s ease;
+  &:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08); }
 }
 
-// Connected Card
 .connected-card {
-  border: 1px solid $success-light;
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
 }
 
-// HubSpot Logo
 .hubspot-logo {
-  margin-bottom: 24px;
-  filter: drop-shadow(0 4px 8px rgba(255, 122, 89, 0.25));
-}
-
-// Success Icon
-.success-icon {
   margin-bottom: 20px;
-  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 6px 12px rgba(255, 122, 89, 0.3));
 }
 
-// Title
+.success-icon {
+  margin-bottom: 16px;
+  animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 .oauth-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   color: $text-primary;
-  margin-bottom: 8px;
-  letter-spacing: -0.3px;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
 }
 
-.success-title {
-  color: $success;
-}
+.success-title { color: #166534; }
 
-// Subtitle
 .oauth-subtitle {
-  font-size: 15px;
+  font-size: 13px;
   color: $text-secondary;
-  line-height: 1.55;
-  margin-bottom: 28px;
-  max-width: 320px;
+  line-height: 1.5;
+  margin: 0 0 24px;
+  max-width: 360px;
 }
 
-// Status text (loading)
-.oauth-status-text {
-  font-size: 15px;
-  color: $text-muted;
+.oauth-status-title { font-size: 16px; font-weight: 700; margin: 12px 0 4px; }
+.oauth-status-text { font-size: 13px; color: $text-muted; margin: 0; }
+
+.card-content-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
-// Actions Container
+.connected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.badge-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+  animation: pulse-dot 2s infinite;
+}
+
+.info-box {
+  width: 100%;
+  background: white;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: $radius-sm;
+  padding: 12px 16px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.info-label { color: $text-muted; font-weight: 500; }
+.info-value { color: $text-primary; font-weight: 600; font-family: monospace; }
+
 .oauth-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
 }
 
-// Connect Button
 .connect-button {
+  width: 100%;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 28px;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
   background: $primary;
   color: #FFFFFF;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  border-radius: $radius-sm;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 9999px;
   border: none;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 122, 89, 0.25);
   transition: all 0.2s ease;
-  letter-spacing: -0.1px;
-
-  &:hover {
-    background: $primary-hover;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(255, 122, 89, 0.35);
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: none;
-  }
+  &:hover { background: #e56645; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255, 122, 89, 0.35); }
 }
 
-// Retry Button
+.reconnect-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+  color: $text-secondary;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid $border;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background: $bg; color: $text-primary; }
+}
+
 .retry-button {
   background: #FFFFFF;
   color: $error;
-  border: 2px solid $error-light;
-
-  &:hover {
-    background: $error-light;
-    box-shadow: 0 6px 20px rgba(217, 48, 37, 0.15);
-    color: $error;
-  }
+  border: 1px solid $error-light;
+  box-shadow: none;
+  &:hover { background: $error-light; color: $error; box-shadow: none; }
 }
 
-// Verify Button
 .verify-button {
+  width: 100%;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 13px 28px;
-  background: $success;
+  padding: 11px 20px;
+  background: #166534;
   color: #FFFFFF;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   border: none;
-  border-radius: $radius-sm;
+  border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s ease;
-  letter-spacing: -0.1px;
-
-  &:hover:not(:disabled) {
-    background: darken($success, 5%);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(30, 142, 62, 0.35);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-  }
+  &:hover:not(:disabled) { background: #14532d; transform: translateY(-1px); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &.verify-button--ghost { background: transparent; color: $text-secondary; border: 1px solid $border; &:hover { background: white; color: $text-primary; } }
 }
 
-// Connected Badge
-.connected-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  background: $success-light;
-  color: $success;
-  font-size: 13px;
+.retry-link {
+  font-size: 12px;
   font-weight: 600;
-  border-radius: 20px;
-  letter-spacing: 0.1px;
+  color: $primary;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  &:hover { text-decoration: underline; }
 }
 
-.badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: $success;
-  animation: pulse-dot 2s infinite;
-}
-
-// Pending Notice
 .pending-notice {
-  display: inline-flex;
+  width: 100%;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
+  gap: 12px;
+  padding: 14px 16px;
   background: $warning-light;
-  border: 1px solid #FCE8B0;
+  border: 1px solid rgba(217, 119, 6, 0.25);
   border-radius: $radius-sm;
-  color: darken($warning, 5%);
-  font-size: 14px;
-  font-weight: 500;
+  text-align: left;
 }
 
-// Error Notice
-.error-notice {
+.pending-title { font-size: 13px; font-weight: 700; color: #92400E; margin: 0; }
+.pending-desc { font-size: 11px; color: #B45309; margin: 2px 0 0; line-height: 1.4; }
+
+.pending-actions { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+
+.listening-bar {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400E;
+  margin-top: 4px;
+}
+
+.pulse-dot-active {
+  width: 6px; height: 6px; border-radius: 50%; background: #D97706;
+  animation: pulse-dot 1.2s infinite;
+}
+
+.error-notice {
+  width: 100%;
+  display: flex;
+  align-items: center;
   gap: 10px;
-  padding: 12px 20px;
+  padding: 12px 16px;
   background: $error-light;
-  border: 1px solid #F5C6C2;
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: $radius-sm;
-  color: $error;
-  font-size: 14px;
-  font-weight: 500;
+  color: #991B1B;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
 }
 
-// Hint Text
-.hint-text {
-  font-size: 13px;
-  color: $text-muted;
-  margin: 0;
-}
+.hint-text { font-size: 11px; color: $text-muted; margin: 0; }
 
-// Loading Pulse Animation
-.loading-pulse {
-  margin-bottom: 16px;
-}
-
+.loading-pulse { margin-bottom: 12px; }
 .pulse-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: $primary;
+  width: 16px; height: 16px; border-radius: 50%; background: $primary;
   animation: pulse 1.2s ease-in-out infinite;
 }
 
-// Button Spinner
+.spinner-ring {
+  width: 22px; height: 22px; border: 2px solid rgba(217, 119, 6, 0.2);
+  border-top-color: #D97706; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+}
+
 .btn-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #FFFFFF;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #FFFFFF; border-radius: 50%; animation: spin 0.6s linear infinite;
 }
 
-// Keyframes
-@keyframes scaleIn {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(0.8);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// Responsive
-@media (max-width: 480px) {
-  .oauth-card {
-    padding: 36px 24px;
-    border-radius: $radius-sm;
-  }
-
-  .oauth-title {
-    font-size: 20px;
-  }
-
-  .connect-button,
-  .verify-button {
-    width: 100%;
-    justify-content: center;
-    padding: 14px 20px;
-    font-size: 14px;
-  }
-}
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes spin { to { transform: rotate(360deg); } }
