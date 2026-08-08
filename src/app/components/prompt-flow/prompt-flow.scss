@@ -1,0 +1,129 @@
+// src/app/components/prompt-flow/prompt-flow.scss
+$page-bg: #FAFAF8;
+$card-bg: #FFFFFF;
+$text: #1A1A1A;
+$text-muted: #6B6B6B;
+$text-meta: #9B9B9B;
+$border: #F0F0F0;
+$border-strong: #E0E0E0;
+
+$lilac: #B8A9E8;
+$lilac-dark: #A89AD8;
+$green-dark: #22c55e;
+$green-bg: #F0FDF4;
+
+.prompt-flow-builder {
+  display: flex; flex-direction: column; height: 100vh; background: $page-bg; color: $text;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px;
+
+  * { box-sizing: border-box; }
+  button { cursor: pointer; border: none; background: transparent; font-family: inherit; }
+  input, select, textarea { font-family: inherit; }
+}
+
+.flow-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 24px; background: white; border-bottom: 1px solid $border; flex-shrink: 0;
+}
+.flow-header__left { display: flex; align-items: center; gap: 12px; }
+.flow-header__right { display: flex; align-items: center; gap: 8px; }
+
+.flow-title-wrap { display: flex; align-items: center; gap: 8px; }
+.flow-title { font-size: 16px; font-weight: 700; margin: 0; cursor: pointer; &:hover { color: $lilac-dark; } }
+
+.chip-badge {
+  padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700;
+  background: rgba(184,169,232,0.15); color: #5B21B6; text-transform: uppercase;
+}
+
+.flow-workspace { flex: 1; display: grid; grid-template-columns: 1fr 300px; overflow: hidden; }
+
+.flow-canvas {
+  padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+  border-right: 1px solid $border;
+}
+.canvas-header { font-size: 12px; font-weight: 600; color: $text-meta; }
+
+.nodes-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+}
+
+.flow-node-card {
+  background: white; border: 1.5px solid $border; border-radius: 14px; padding: 16px;
+  display: flex; flex-direction: column; gap: 10px; transition: all 0.2s;
+  &:hover { border-color: $border-strong; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  &.flow-node-card--start { border: 2px solid $green-dark; background: $green-bg; }
+}
+
+.node-card__header { display: flex; align-items: center; justify-content: space-between; }
+.node-type-pill {
+  padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase;
+  &.node-type-pill--prompt { background: rgba(184,169,232,0.2); color: #5B21B6; }
+  &.node-type-pill--callflow { background: rgba(78,205,196,0.2); color: #115E59; }
+}
+.node-start-badge {
+  font-size: 10px; font-weight: 700; color: #15803d; background: rgba(34, 197, 94, 0.15);
+  padding: 1px 6px; border-radius: 9999px;
+}
+.node-card__actions { display: flex; gap: 2px; }
+
+.node-card__title { font-size: 13px; font-weight: 700; margin: 0; }
+.node-card__id { font-size: 10px; color: $text-meta; font-family: monospace; margin: 0; }
+
+.node-card__connections { border-top: 1px solid $border; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.conn-label { font-size: 10px; font-weight: 600; color: $text-meta; text-transform: uppercase; }
+
+.conn-list { display: flex; flex-direction: column; gap: 4px; }
+.conn-item {
+  display: flex; align-items: center; justify-content: space-between; font-size: 11px;
+  background: rgba(240,240,240,0.5); padding: 4px 8px; border-radius: 6px;
+}
+.btn-link { font-size: 10px; color: #5B21B6; font-weight: 600; &.btn-link--danger { color: #DC2626; } }
+
+.flow-sidebar { padding: 20px; background: white; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.sidebar-title { font-size: 13px; font-weight: 700; margin: 0; }
+.empty-text { font-size: 11px; color: $text-meta; line-height: 1.4; }
+
+.connection-card {
+  padding: 10px; border: 1px solid $border; border-radius: 8px; background: $page-bg;
+}
+.connection-card__header { display: flex; align-items: center; justify-content: space-between; }
+.conn-title { font-size: 11px; font-weight: 700; }
+.conn-desc { font-size: 10px; color: $text-muted; margin: 4px 0 0; }
+
+.btn-primary {
+  padding: 8px 16px; background: $lilac; color: $text; border-radius: 9999px;
+  font-size: 12px; font-weight: 600; transition: all 0.2s;
+  &:hover { background: $lilac-dark; }
+  &.btn-primary--sm { padding: 6px 12px; font-size: 11px; }
+}
+.btn-ghost { padding: 6px 12px; border-radius: 9999px; font-size: 11px; font-weight: 600; color: $text-muted; }
+.btn-outline { padding: 6px 12px; border-radius: 8px; border: 1px solid $border-strong; font-size: 11px; color: $text-muted; }
+.icon-btn { padding: 4px; border-radius: 6px; color: $text-muted; &:hover { background: rgba(0,0,0,0.05); } }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+}
+.modal { background: white; border-radius: 14px; width: 100%; max-width: 440px; display: flex; flex-direction: column; overflow: hidden; }
+.modal__header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid $border; }
+.modal__title { font-size: 14px; font-weight: 700; margin: 0; }
+.modal__body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.modal__footer { padding: 12px 20px; border-top: 1px solid $border; display: flex; justify-content: flex-end; gap: 8px; background: $page-bg; }
+
+.form-block { display: flex; flex-direction: column; gap: 4px; }
+.form-block__label { font-size: 10px; font-weight: 700; color: $text-muted; text-transform: uppercase; }
+.req { color: #FF6B6B; }
+
+.input {
+  width: 100%; padding: 8px 10px; border: 1px solid $border; border-radius: 6px; font-size: 12px;
+  &.input--sm { padding: 4px 6px; font-size: 11px; }
+  &.input--title { font-size: 16px; font-weight: 700; padding: 4px 8px; }
+}
+
+.spinner {
+  width: 16px; height: 16px; border: 2px solid $border; border-top-color: $lilac;
+  border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;
+  &.spinner--sm { width: 10px; height: 10px; border-width: 1px; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }

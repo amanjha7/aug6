@@ -1,1 +1,158 @@
-<p>prompt-flow works!</p>
+<!-- src/app/components/prompt-flow/prompt-flow.html -->
+<div class="prompt-flow-builder">
+
+  <!-- Top Navigation Header -->
+  <div class="flow-header">
+    <div class="flow-header__left">
+      <button class="btn-ghost" (click)="close()">&larr; Back</button>
+      <div class="flow-title-wrap">
+        <h2 *ngIf="!isEditingName" class="flow-title" (click)="isEditingName=true">{{ flowData.name || 'Untitled Prompt Flow' }}</h2>
+        <input *ngIf="isEditingName" class="input input--title" [(ngModel)]="flowData.name" (blur)="isEditingName=false" autoFocus/>
+        <span class="chip-badge">Prompt Flow Builder</span>
+      </div>
+    </div>
+
+    <div class="flow-header__right">
+      <button class="btn-outline btn-outline--sm" (click)="openAddNodeModal()">+ Add Step Node</button>
+      <button class="btn-primary btn-primary--sm" (click)="saveFlow()" [disabled]="saving">
+        <span *ngIf="!saving">Save Flow</span>
+        <span *ngIf="saving"><span class="spinner spinner--sm"></span> Saving&hellip;</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Workspace Canvas & Panel -->
+  <div class="flow-workspace">
+
+    <!-- Visual Nodes Canvas / List -->
+    <div class="flow-canvas">
+      <div class="canvas-header">
+        <span class="canvas-label">Flow Canvas Steps ({{ nodes.length }} Nodes, {{ connections.length }} Connections)</span>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="list-empty"><div class="spinner"></div><p>Loading flow data&hellip;</p></div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && nodes.length===0" class="list-empty">
+        <p class="list-empty__title">No steps in this flow yet</p>
+        <button class="btn-primary btn-primary--sm" (click)="openAddNodeModal()">+ Add First Flow Step</button>
+      </div>
+
+      <!-- Flow Nodes Grid -->
+      <div *ngIf="!isLoading && nodes.length>0" class="nodes-grid">
+        <div *ngFor="let node of nodes; let i=index" class="flow-node-card" [class.flow-node-card--start]="node.isStart">
+          <div class="node-card__header">
+            <span class="node-type-pill" [class.node-type-pill--prompt]="node.type==='PROMPT'" [class.node-type-pill--callflow]="node.type==='CALLFLOW'">
+              {{ node.type }}
+            </span>
+            <span *ngIf="node.isStart" class="node-start-badge">Start Node</span>
+            <div class="node-card__actions">
+              <button *ngIf="!node.isStart" class="icon-btn" (click)="setStartNode(node.id)" title="Set as Start Node">&#9733;</button>
+              <button class="icon-btn icon-btn--danger" (click)="deleteNode(node.id)" title="Delete Step">&times;</button>
+            </div>
+          </div>
+
+          <h4 class="node-card__title">{{ node.name }}</h4>
+          <p class="node-card__id">ID: {{ node.id }}</p>
+
+          <!-- Node Connections outbound -->
+          <div class="node-card__connections">
+            <span class="conn-label">Target Handoffs:</span>
+            <div class="conn-list">
+              <div *ngFor="let c of connections; let cIdx=index">
+                <div *ngIf="c.source===node.id" class="conn-item">
+                  <span>&rarr; {{ getNodeName(c.target) }}</span>
+                  <button class="btn-link" (click)="openHandoverModal(c)">Rules</button>
+                  <button class="btn-link btn-link--danger" (click)="deleteConnection(cIdx)">&times;</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Connect to selector -->
+            <div class="connect-picker">
+              <select class="input input--sm" #targetSelect (change)="connectNodes(node.id, targetSelect.value); targetSelect.value=''">
+                <option value="">+ Connect to Node...</option>
+                <option *ngFor="let targetNode of nodes" [value]="targetNode.id" [disabled]="targetNode.id===node.id">
+                  {{ targetNode.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Handover & Flow Connections Summary Panel -->
+    <div class="flow-sidebar">
+      <h3 class="sidebar-title">Handoff Rules Summary</h3>
+      <div *ngIf="connections.length===0" class="empty-text">No node transitions configured yet. Connect two nodes above to define transition rules.</div>
+
+      <div *ngFor="let c of connections; let idx=index" class="connection-card">
+        <div class="connection-card__header">
+          <span class="conn-title">{{ getNodeName(c.source) }} &rarr; {{ getNodeName(c.target) }}</span>
+          <button class="icon-btn" (click)="openHandoverModal(c)">Edit</button>
+        </div>
+        <p class="conn-desc">{{ c.handover?.description || 'No handover rule configured' }}</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════ ADD NODE MODAL ═══════════════════ -->
+  <div class="modal-overlay" *ngIf="showAddNodeModal" (click)="closeAddNodeModal()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">Add Step Node to Flow</h2>
+        <button class="icon-btn" (click)="closeAddNodeModal()">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div class="form-block">
+          <label class="form-block__label">Node Name <span class="req">*</span></label>
+          <input class="input" [(ngModel)]="newNodeName" placeholder="e.g. Sales Inquiry Step"/>
+        </div>
+
+        <div class="form-block">
+          <label class="form-block__label">Step Type</label>
+          <select class="input" [(ngModel)]="newNodeType">
+            <option value="PROMPT">PROMPT (AI Persona Prompt)</option>
+            <option value="CALLFLOW">CALLFLOW (External Call Workflow)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" (click)="closeAddNodeModal()">Cancel</button>
+        <button class="btn-primary btn-primary--sm" (click)="addNode()" [disabled]="!newNodeName.trim()">Add Node</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ HANDOVER RULES MODAL ═══════════════════ -->
+  <div class="modal-overlay" *ngIf="showHandoverModal" (click)="showHandoverModal=false">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">Handoff Transition Rule</h2>
+        <button class="icon-btn" (click)="showHandoverModal=false">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div class="form-block">
+          <label class="form-block__label">Rule Name</label>
+          <input class="input" [(ngModel)]="handoverForm.name" placeholder="e.g. Qualified Lead Handoff"/>
+        </div>
+        <div class="form-block">
+          <label class="form-block__label">Condition / Description</label>
+          <textarea class="input" [(ngModel)]="handoverForm.description" rows="3" placeholder="Describe condition under which agent transitions to next step"></textarea>
+        </div>
+        <div class="form-block">
+          <label class="form-block__label">Transition Message</label>
+          <input class="input" [(ngModel)]="handoverForm.default_message" placeholder="e.g. Connecting you to a senior specialist now."/>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" (click)="showHandoverModal=false">Cancel</button>
+        <button class="btn-primary btn-primary--sm" (click)="saveHandoverModal()">Save Rule</button>
+      </div>
+    </div>
+  </div>
+
+</div>
