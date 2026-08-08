@@ -52,6 +52,7 @@ export class ChannelManagement implements OnInit {
   // ── Modal ──
   showModal = false;
   isEditMode = false;
+  createStep: 'type' | 'form' = 'type';
   editingChannel: any = null;
   saving = false;
 
@@ -521,11 +522,12 @@ export class ChannelManagement implements OnInit {
     this.channelHealthExpanded = false;
     this.conversationCloseExpanded = false;
     this.incomingCallExpanded = false;
+    this.createStep = 'type';
     this.showModal = true;
     this.loadResources(); 
   }
 
-  openEditModal(channel: any): void { this.initForm(channel); this.showModal = true; this.loadResources(); }
+  openEditModal(channel: any): void { this.initForm(channel); this.createStep = 'form'; this.showModal = true; this.loadResources(); }
 
   closeModal(): void {
     if (this.saving) return;
@@ -539,6 +541,12 @@ export class ChannelManagement implements OnInit {
     this.channelForm.patchValue({ type });
     this.selectedResourceId = null;
     this.selectedResourceName = '';
+    this.createStep = 'form';
+  }
+
+  changeChannelType(): void {
+    if (this.isEditMode) return;
+    this.createStep = 'type';
   }
 
   toggleDirection(field: 'incoming' | 'outgoing'): void {
