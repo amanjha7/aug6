@@ -26,11 +26,11 @@ export class ChannelService {
 
   createTwilioChannel(dashId: string, payload: any): Observable<any> {
     // backend expects dashboard_id in body
-    return this.http.post(`${this.base}channel`, { ...payload, dashboard_id: dashId });
+    return this.http.post(`${this.base}channel`, { ...payload, portal_id: dashId });
   }
 
   updateTwilioChannel(dashId: string, channelId: string, payload: any): Observable<any> {
-    return this.http.put(`${this.base}channel/${channelId}`, { ...payload, dashboard_id: dashId });
+    return this.http.put(`${this.base}channel/${channelId}`, { ...payload, portal_id: dashId });
   }
 
   deleteChannel(dashId: string, channelId: string): Observable<any> {
@@ -55,7 +55,7 @@ export class ChannelService {
   }
 
   createResource(dashId: string, data: any): Observable<any> {
-    return this.http.post(`${this.base}resource`, { ...data, portal_id: dashId, org_id: dashId });
+    return this.http.post(`${this.base}resource`, { ...data, portal_id: dashId });
   }
 
   updateResource(dashId: string, resourceId: string, data: any): Observable<any> {
@@ -89,7 +89,7 @@ export class ChannelService {
 
   // ──────────── COUNTRY CODES ────────────
   getCountryCodes(): Observable<any> {
-    return this.http.get(`${this.base}country-codes`);
+    return this.http.get(`https://api.pronnel.com/api/location/info`);
   }
 
   // ──────────── REGIONS ────────────

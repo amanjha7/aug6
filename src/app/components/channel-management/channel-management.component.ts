@@ -171,6 +171,7 @@ export class ChannelManagement implements OnInit {
   get selectedTypeMeta(): ChannelTypeMeta | null { return this.channelTypes.find(t => t.value === this.selectedType) || null; }
 
   isSipOrGateway(): boolean { return ['SIP', 'SIP_GATEWAY_HARDWARE'].includes(this.selectedType); }
+  isCallingType(type: string): boolean { return this.channelTypes.map(t => t.value).includes(type); }
   isResourceRequired(): boolean { return this.selectedTypeMeta?.requiresResource ?? false; }
 
   get totalCount(): number { return this.channels.length; }
@@ -295,31 +296,51 @@ export class ChannelManagement implements OnInit {
   removeIpMatch(i: number): void { this.ipMatchList.removeAt(i); }
 
   patchForm(channel: any): void {
+    const chType = channel.type || channel.channel_type || '';
     const fv: any = {
       name: channel.name || '',
-      type: channel.type || channel.channel_type || '',
-      incoming: channel.call_type?.includes('INCOMING') || false,
-      outgoing: channel.call_type?.includes('OUTGOING') || false,
+      type: chType,
+      incoming: channel.type?.includes('INCOMING') || channel.call_type?.includes('INCOMING') || false,
+      outgoing: channel.type?.includes('OUTGOING') || channel.call_type?.includes('OUTGOING') || false,
     };
 
-    if (channel.twilio_settings) {
-      fv.accountSID = channel.twilio_settings.account_sid || '';
-      fv.authToken = channel.twilio_settings.auth_token || '';
-    }
-    if (channel.sip_settings) {
-      fv.username = channel.sip_settings.username || '';
-      fv.password = channel.sip_settings.password || '';
-      fv.port = channel.sip_settings.port || '';
-      fv.server_uri = channel.sip_settings.server_uri || '';
-      fv.server_ip = channel.sip_settings.server_ip || '';
-      fv.protocol = channel.sip_settings.protocol || 'UDP';
-      fv.mediaencryption = channel.sip_settings.media_encryption || 'none';
-      fv.region = channel.sip_settings.domain || '';
-    }
+    // Mobile number — ALL channel types can have it
     if (channel.mobile_number) {
       fv.mobileCountryCode = channel.mobile_number.country_code || '';
       fv.mobileNumber = channel.mobile_number.mobile_number || '';
     }
+
+    if (chType === 'TWILIO') {
+      if (channel.twilio_settings) {
+        fv.accountSID = channel.twilio_settings.account_sid || '';
+        fv.authToken = channel.twilio_settings.auth_token || '';
+      }
+    }
+
+    if (chType === 'SIP') {
+      if (channel.sip_settings) {
+        fv.username = channel.sip_settings.username || '';
+        fv.password = channel.sip_settings.password || '';
+        fv.port = channel.sip_settings.port || '';
+        fv.server_uri = channel.sip_settings.server_uri || '';
+        fv.protocol = channel.sip_settings.protocol || 'UDP';
+        fv.mediaencryption = channel.sip_settings.media_encryption || 'none';
+        fv.region = channel.sip_settings.domain || '';
+      }
+    }
+
+    if (chType === 'SIP_GATEWAY_HARDWARE') {
+      if (channel.sip_settings) {
+        fv.server_ip = channel.sip_settings.server_ip || '';
+        fv.protocol = channel.sip_settings.protocol || 'UDP';
+        fv.region = channel.sip_settings.domain || '';
+        // Gateway stores additional_settings inside sip_settings
+        if (channel.sip_settings.additional_settings) {
+          channel.additional_settings = channel.additional_settings || channel.sip_settings.additional_settings;
+        }
+      }
+    }
+
     fv.registrationEnabled = channel.registration || false;
     fv.aiAgentId = channel.ai_agent_id || '';
     fv.callFlowId = channel.call_flow_id || '';
@@ -368,8 +389,15 @@ export class ChannelManagement implements OnInit {
   loadChannels(): void {
     this.isLoading = true;
     this.channelService.getChannels(this.dashId).subscribe({
-      next: (res: any) => { this.channels = res?.result?.channels || []; this.applyFilters(); this.isLoading = false; },
-      error: () => { this.showToast('error', 'Failed to load channels'); this.isLoading = false; },
+      next: (res: any) => {
+        this.channels = Array.isArray(res) ? res : (res?.result?.channels || res?.result || []);
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.showToast('error', 'Failed to load channels');
+        this.isLoading = false;
+      },
     });
   }
 
@@ -404,7 +432,7 @@ export class ChannelManagement implements OnInit {
   loadResources(): void {
     this.loadingResources = true;
     this.channelService.getResources(this.dashId).subscribe({
-      next: (res: any) => { this.resourcesList = res?.result || res || []; this.loadingResources = false; },
+      next: (res: any) => { this.resourcesList = Array.isArray(res) ? res : (res?.result || []); this.loadingResources = false; },
       error: () => { this.loadingResources = false; },
     });
   }
@@ -582,9 +610,13 @@ export class ChannelManagement implements OnInit {
       if (this.incomingCallOption === 'callFlow' && form.callFlowId) payload.call_flow_id = form.callFlowId;
     }
 
+    // Mobile number for all calling types
+    if (form.mobileCountryCode || form.mobileNumber) {
+      payload.mobile_number = { country_code: form.mobileCountryCode, mobile_number: form.mobileNumber?.trim() };
+    }
+
     // TWILIO
     if (form.type === 'TWILIO') {
-      payload.mobile_number = { country_code: form.mobileCountryCode, mobile_number: form.mobileNumber?.trim() };
       payload.twilio_settings = { account_sid: form.accountSID?.trim(), auth_token: form.authToken?.trim() };
     }
 

@@ -92,7 +92,7 @@
             <div class="row__meta">
               <span class="pill" [style.background-color]="getTypeMeta(getChannelType(ch)).bgTint" [style.color]="getTypeMeta(getChannelType(ch)).textColor" [style.border-color]="getTypeMeta(getChannelType(ch)).borderTint">{{ getTypeMeta(getChannelType(ch)).label }}</span>
               <span *ngIf="ch.sip_settings?.domain || ch.region" class="meta-chip"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>{{ ch.sip_settings?.domain || ch.region }}</span>
-              <span *ngIf="getChannelType(ch)==='TWILIO' && ch.mobile_number?.mobile_number" class="meta-chip"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ ch.mobile_number.country_code }} {{ ch.mobile_number.mobile_number }}</span>
+              <span *ngIf="ch.mobile_number?.mobile_number" class="meta-chip"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#B8A9E8" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ ch.mobile_number.country_code }} {{ ch.mobile_number.mobile_number }}</span>
               <span *ngIf="getChannelType(ch)==='SIP' && ch.sip_settings?.server_uri" class="meta-chip"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4ECDC4" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/></svg>{{ ch.sip_settings.server_uri }}:{{ ch.sip_settings.port }}</span>
               <span *ngIf="getChannelType(ch)==='SIP_GATEWAY_HARDWARE' && ch.sip_settings?.server_ip" class="meta-chip"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/></svg>{{ ch.sip_settings.server_ip }}</span>
             </div>
@@ -228,15 +228,15 @@
             </select>
           </div>
 
-          <!-- ═══════ MOBILE NUMBER (Twilio only) ═══════ -->
-          <div class="form-block" *ngIf="selectedType==='TWILIO'">
+          <!-- ═══════ MOBILE NUMBER (Twilio & SIP types) ═══════ -->
+          <div class="form-block" *ngIf="isCallingType(selectedType)">
             <label class="form-block__label form-block__label--with-icon">
               Mobile Number <span class="req">*</span>
             </label>
             <div class="mobile-row">
               <select class="input input--code" formControlName="mobileCountryCode">
                 <option value="">Code</option>
-                <option *ngFor="let c of countryCodes" [value]="c.dial_code">{{ c.dial_code }} ({{ c.name }})</option>
+                <option *ngFor="let c of countryCodes" [value]="c.code">{{ c.dial_code }} ({{ c.name }})</option>
               </select>
               <input class="input" formControlName="mobileNumber" placeholder="4155551234" (input)="onMobileNumberInput($event)"/>
             </div>
@@ -492,10 +492,10 @@
   </div>
 
   <!-- ═══════════════════ SUB-PANELS (slide-over) ═══════════════════ -->
-  <div class="panel-overlay" [style.display]="activePanel==='forwardedNumbers' ? 'flex' : 'none'" (click)="closePanel()">
+  <div class="panel-overlay" *ngIf="showModal" [style.display]="activePanel==='forwardedNumbers' ? 'flex' : 'none'" (click)="closePanel()">
     <div class="panel" (click)="$event.stopPropagation()">
       <div class="panel__header">
-        <button class="icon-btn" (click)="closePanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="btn-ghost" (click)="closePanel()">← Back</button>
         <h3 class="panel__title">Forwarded Numbers</h3>
         <button class="btn-outline" (click)="addForwardedNumber()">+ Add</button>
       </div>
@@ -521,10 +521,10 @@
   </div>
 
   <!-- Forward To Numbers Panel -->
-  <div class="panel-overlay" [style.display]="activePanel==='forwardToNumbers' ? 'flex' : 'none'" (click)="closePanel()">
+  <div class="panel-overlay" *ngIf="showModal" [style.display]="activePanel==='forwardToNumbers' ? 'flex' : 'none'" (click)="closePanel()">
     <div class="panel" (click)="$event.stopPropagation()">
       <div class="panel__header">
-        <button class="icon-btn" (click)="closePanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="btn-ghost" (click)="closePanel()">← Back</button>
         <h3 class="panel__title">Forward To Number</h3>
       </div>
       <div class="panel__body">
@@ -549,58 +549,56 @@
   </div>
 
   <!-- IP Match List Panel -->
-  <div class="panel-overlay" [style.display]="activePanel==='ipMatchList' ? 'flex' : 'none'" (click)="closePanel()">
+  <div class="panel-overlay" *ngIf="showModal" [style.display]="activePanel==='ipMatchList' ? 'flex' : 'none'" (click)="closePanel()">
     <div class="panel" (click)="$event.stopPropagation()">
       <div class="panel__header">
-        <button class="icon-btn" (click)="closePanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="btn-ghost" (click)="closePanel()">← Back</button>
         <h3 class="panel__title">IP Match List</h3>
         <button class="btn-outline" (click)="addIpMatch()">+ Add</button>
       </div>
-      <div class="panel__body" [formGroup]="channelForm">
-        <div formGroupName="additionalSettings" formArrayName="ipMatchList">
-          <div *ngFor="let ctrl of ipMatchList.controls; let i=index" class="panel__item-row">
-            <input class="input" [formControlName]="i" placeholder="Enter IP or Domain" (input)="$any($event.target).value=$any($event.target).value.trim()"/>
-            <button class="icon-btn icon-btn--danger" (click)="removeIpMatch(i)" *ngIf="ipMatchList.length>1">&#10005;</button>
-          </div>
+      <div class="panel__body">
+        <div *ngFor="let ctrl of ipMatchList.controls; let i=index" class="panel__item-row">
+          <input class="input" [formControl]="$any(ctrl)" placeholder="Enter IP or Domain" (input)="$any($event.target).value=$any($event.target).value.trim()"/>
+          <button class="icon-btn icon-btn--danger" (click)="removeIpMatch(i)" *ngIf="ipMatchList.length>1">&#10005;</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Ping Timeout Panel -->
-  <div class="panel-overlay" [style.display]="activePanel==='pingTimeout' ? 'flex' : 'none'" (click)="closePanel()">
+  <div class="panel-overlay" *ngIf="showModal" [style.display]="activePanel==='pingTimeout' ? 'flex' : 'none'" (click)="closePanel()">
     <div class="panel" (click)="$event.stopPropagation()">
       <div class="panel__header">
-        <button class="icon-btn" (click)="closePanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="btn-ghost" (click)="closePanel()">← Back</button>
         <h3 class="panel__title">Ping Timeout</h3>
       </div>
-      <div class="panel__body" [formGroup]="channelForm">
-        <div formGroupName="additionalSettings" class="form-block">
+      <div class="panel__body">
+        <div class="form-block">
           <label class="form-block__label">Timeout (seconds)</label>
-          <input class="input" type="number" formControlName="pingTimeout" placeholder="Enter timeout in seconds" min="0"/>
+          <input class="input" type="number" [formControl]="$any(channelForm.get('additionalSettings.pingTimeout'))" placeholder="Enter timeout in seconds" min="0"/>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Allowed Calls Count Panel -->
-  <div class="panel-overlay" [style.display]="activePanel==='allowedCallsCount' ? 'flex' : 'none'" (click)="closePanel()">
+  <div class="panel-overlay" *ngIf="showModal" [style.display]="activePanel==='allowedCallsCount' ? 'flex' : 'none'" (click)="closePanel()">
     <div class="panel" (click)="$event.stopPropagation()">
       <div class="panel__header">
-        <button class="icon-btn" (click)="closePanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="btn-ghost" (click)="closePanel()">← Back</button>
         <h3 class="panel__title">Allowed Calls Count</h3>
       </div>
-      <div class="panel__body" [formGroup]="channelForm">
-        <div formGroupName="additionalSettings" class="form-block">
+      <div class="panel__body">
+        <div class="form-block">
           <label class="form-block__label">Max calls per day</label>
-          <input class="input" type="number" formControlName="allowedCallsCount" placeholder="Enter limit" min="0"/>
+          <input class="input" type="number" [formControl]="$any(channelForm.get('additionalSettings.allowedCallsCount'))" placeholder="Enter limit" min="0"/>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Time Settings Panel -->
-  <div class="panel-overlay" [style.display]="activePanel==='timeSettings' ? 'flex' : 'none'" (click)="closePanel()">
+  <!-- Time Settings Panel (only closes via back button, not overlay click) -->
+  <div class="panel-overlay" *ngIf="showModal" [style.display]="activePanel==='timeSettings' ? 'flex' : 'none'">
     <div class="panel" style="max-width:640px;max-height:92vh;" (click)="$event.stopPropagation()">
       <app-calendar-setting
         [selectedScheduleObj]="timeSettingsObj"

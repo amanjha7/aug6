@@ -1,7 +1,7 @@
 // src/app/settings/settings.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChannelManagement } from '../components/channel-management/channel-management';
+import { ChannelManagement } from '../components/channel-management/channel-management.component';
 import { Chatbot } from '../components/chatbot/chatbot';
 
 interface SettingsSection {

@@ -6,6 +6,6 @@
     "outDir": "./out-tsc/app",
     "types": []
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/app/components/channel-management/channel-management.component.ts"],
   "exclude": ["src/**/*.spec.ts"]
 }
