@@ -1,0 +1,88 @@
+<!-- src/app/components/calendar-setting/calendar-setting.html -->
+<div class="calendar-settings">
+  <div class="cal-header" *ngIf="showConfig.showHeader">
+    <button class="cal-back-btn" (click)="onClose()">← Back</button>
+    <h3 class="cal-title">Schedule Settings</h3>
+  </div>
+
+  <div class="cal-body">
+
+    <!-- ═══════ WEEKLY TIME SLOTS ═══════ -->
+    <div class="cal-section" *ngIf="showConfig.weeklyTimeSlots">
+      <label class="cal-section-title">Weekly Time Slots</label>
+      <p class="cal-section-desc">Set weekly availability for calls</p>
+
+      <div class="cal-week-row" *ngFor="let day of weekDays">
+        <div class="cal-week-label">{{ day.name }}</div>
+        <div class="cal-week-slots">
+          <div class="cal-slot-row" *ngFor="let slot of selectedScheduleObj.weekly_time_slots[day.key]; let i=index">
+            <input
+              class="cal-time-input"
+              [value]="getFromDisplay(day.key, i)"
+              readonly
+              (click)="generateTimeSuggestions(); selectedTimeIndex='from'; editingSlotDay=day.key; editingSlotIndex=i"
+            />
+            <span class="cal-time-sep"> - </span>
+            <input
+              class="cal-time-input"
+              [value]="getToDisplay(day.key, i)"
+              readonly
+              (click)="generateTimeSuggestions(); selectedTimeIndex='to'; editingSlotDay=day.key; editingSlotIndex=i"
+            />
+            <button class="cal-icon-btn cal-remove-btn" (click)="removeTimeSlot(day.key, i)">✕</button>
+
+            <!-- Time suggestion dropdown -->
+            <div class="cal-time-dropdown" *ngIf="editingSlotDay===day.key && editingSlotIndex===i && timeSuggestions.length">
+              <div class="cal-time-item" *ngFor="let t of timeSuggestions"
+                   (click)="onTimeSelect(t, day.key, i, selectedTimeIndex)">
+                {{ t.timeString }}
+              </div>
+            </div>
+          </div>
+          <div class="cal-slot-empty" *ngIf="!selectedScheduleObj.weekly_time_slots[day.key]?.length">
+            <em class="text-muted">Unavailable</em>
+          </div>
+        </div>
+        <button class="cal-icon-btn cal-add-btn" (click)="addTimeSlot(day.key)">+</button>
+      </div>
+    </div>
+
+    <!-- ═══════ DATE-SPECIFIC TIME SLOTS ═══════ -->
+    <div class="cal-section" *ngIf="showConfig.specificDateTimeSlots">
+      <div class="cal-section-header">
+        <div>
+          <label class="cal-section-title">Date-Specific Time Slots</label>
+          <p class="cal-section-desc">Override weekly slots for specific dates</p>
+        </div>
+        <button class="cal-add-section-btn" (click)="addDateTimeSlot()">+ Add Date</button>
+      </div>
+
+      <div class="cal-date-slot" *ngFor="let dateSlot of selectedScheduleObj.specific_date_time_slots; let di=index">
+        <div class="cal-date-slot-header">
+          <input type="date" class="cal-date-picker" [value]="dateStrToDisplay(dateSlot)"
+                 (change)="onDateChange($any($event.target).value, di)" />
+          <button class="cal-icon-btn cal-remove-btn" (click)="removeDateTimeSlot(di)">✕</button>
+        </div>
+        <div class="cal-slot-row" *ngFor="let ts of dateSlot.time_slots; let si=index">
+          <input class="cal-time-input" [value]="minutesToTimeString(ts.from)" readonly
+                 (click)="generateTimeSuggestions(); selectedTimeIndex='from'; editingSlotDay='__date__'; editingSlotIndex=di*100+si" />
+          <span class="cal-time-sep"> - </span>
+          <input class="cal-time-input" [value]="minutesToTimeString(ts.to)" readonly
+                 (click)="generateTimeSuggestions(); selectedTimeIndex='to'; editingSlotDay='__date__'; editingSlotIndex=di*100+si" />
+          <button class="cal-icon-btn cal-remove-btn" (click)="deleteTimeStampFromOverride(di, si)">✕</button>
+
+          <div class="cal-time-dropdown" *ngIf="editingSlotDay==='__date__' && editingSlotIndex===di*100+si && timeSuggestions.length">
+            <div class="cal-time-item" *ngFor="let t of timeSuggestions"
+                 (click)="onDateSpecificTimeSelect(t, di, si, selectedTimeIndex)">
+              {{ t.timeString }}
+            </div>
+          </div>
+        </div>
+        <div class="cal-slot-empty" *ngIf="!dateSlot.time_slots?.length">
+          <button class="cal-add-time-link" (click)="addTimeSlotForOverride(di)">+ Add time slot</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

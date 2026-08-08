@@ -28,7 +28,7 @@ export class Oauth implements OnInit {
   }
 
   get oauthInitUrl(): string {
-    return `${environment.hostUrl}app/oauth/init?portalId=${this.portalId}&userEmail=${encodeURIComponent(this.userEmail)}`;
+    return `${environment.hostUrl}/oauth/init?portalId=${this.portalId}&userEmail=${encodeURIComponent(this.userEmail)}`;
   }
 
   ngOnInit(): void {
@@ -38,7 +38,7 @@ export class Oauth implements OnInit {
   validate(): void {
     this.loading.set(true);
 
-    const url = `${environment.hostUrl}app/oauth/connection/validate?portalid=${this.portalId}&useremail=${encodeURIComponent(this.userEmail)}`;
+    const url = `${environment.hostUrl}/oauth/connection/validate?portalid=${this.portalId}&useremail=${encodeURIComponent(this.userEmail)}`;
 
     this.http.get<any>(url).subscribe({
       next: (data) => {

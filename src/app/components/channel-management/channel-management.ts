@@ -3,6 +3,7 @@ import { Component, Input, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ChannelService } from '../../services/channel.service';
+import { CalendarSetting } from '../calendar-setting/calendar-setting';
 
 interface ChannelTypeMeta {
   value: string;
@@ -31,7 +32,7 @@ interface Resource {
 @Component({
   selector: 'app-channel-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CalendarSetting],
   templateUrl: './channel-management.html',
   styleUrls: ['./channel-management.scss'],
 })

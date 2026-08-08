@@ -22,7 +22,7 @@ interface SettingsSection {
   styleUrls: ['./settings.scss'],
 })
 export class Settings {
-  dashId = 'your-dashboard-id'; // Replace with actual ID from route/parent
+  dashId = '246705749'; // Replace with actual ID from route/parent
 
   activeSection = 'channels';
   searchQuery = '';
